@@ -14,7 +14,7 @@ const EMPLOYER_ABI = [
   { "inputs": [{ "internalType": "address", "name": "addr", "type": "address" }, { "internalType": "uint256", "name": "wageWei", "type": "uint256" }, { "internalType": "uint256", "name": "payFrequency", "type": "uint256" }], "name": "updateEmployee", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
   { "inputs": [{ "internalType": "address", "name": "addr", "type": "address" }], "name": "removeEmployee", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
   { "inputs": [{ "internalType": "address", "name": "addr", "type": "address" }], "name": "payEmployee", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-  { "inputs": [], "name": "processDuePayments", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "internalType": "uint256", "name": "start", "type": "uint256" }, { "internalType": "uint256", "name": "count", "type": "uint256" }], "name": "processDuePayments", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
   { "inputs": [{ "internalType": "address", "name": "addr", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }], "name": "sendBonus", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
   { "inputs": [{ "internalType": "address", "name": "addr", "type": "address" }], "name": "getEmployee", "outputs": [{ "internalType": "address", "name": "", "type": "address" }, { "internalType": "uint256", "name": "", "type": "uint256" }, { "internalType": "uint256", "name": "", "type": "uint256" }, { "internalType": "uint256", "name": "", "type": "uint256" }, { "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "view", "type": "function" },
   { "inputs": [], "name": "getEmployeeList", "outputs": [{ "internalType": "address[]", "name": "", "type": "address[]" }], "stateMutability": "view", "type": "function" },
@@ -178,7 +178,8 @@ async function handlePayEmployee(addr) {
 async function handleProcessDue() {
     try {
         showToast("Processing all due payments…", "info");
-        const tx = await payrollContract.processDuePayments();
+        const count = await payrollContract.getEmployeeCount();
+        const tx = await payrollContract.processDuePayments(0, count);
         await tx.wait();
         showToast("Due payments processed.", "success");
         await refreshDashboard();

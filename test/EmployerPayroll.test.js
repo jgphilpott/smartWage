@@ -226,7 +226,7 @@ describe("EmployerPayroll", function () {
             const before1 = await ethers.provider.getBalance(employee1.address);
             const before2 = await ethers.provider.getBalance(employee2.address);
 
-            await payroll.processDuePayments();
+            await payroll.processDuePayments(0, 100);
 
             const after1 = await ethers.provider.getBalance(employee1.address);
             const after2 = await ethers.provider.getBalance(employee2.address);
@@ -239,7 +239,7 @@ describe("EmployerPayroll", function () {
             await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
             await time.increase(ONE_WEEK + 1);
             await expect(
-                payroll.connect(other).processDuePayments()
+                payroll.connect(other).processDuePayments(0, 100)
             ).to.not.be.reverted;
         });
 
@@ -248,10 +248,41 @@ describe("EmployerPayroll", function () {
             await time.increase(ONE_WEEK);
 
             const before = await ethers.provider.getBalance(employee1.address);
-            await payroll.processDuePayments();
+            await payroll.processDuePayments(0, 100);
             const after = await ethers.provider.getBalance(employee1.address);
 
             expect(after - before).to.equal(0n);
+        });
+
+        it("only processes employees within the given range", async function () {
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK);
+
+            await time.increase(ONE_WEEK + 1);
+
+            const before1 = await ethers.provider.getBalance(employee1.address);
+            const before2 = await ethers.provider.getBalance(employee2.address);
+
+            // Process only the first employee (index 0, count 1)
+            await payroll.processDuePayments(0, 1);
+
+            const after1 = await ethers.provider.getBalance(employee1.address);
+            const after2 = await ethers.provider.getBalance(employee2.address);
+
+            expect(after1 - before1).to.equal(WAGE);
+            expect(after2 - before2).to.equal(0n);
+        });
+
+        it("clamps end index to list length when count exceeds bounds", async function () {
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await time.increase(ONE_WEEK + 1);
+
+            const before = await ethers.provider.getBalance(employee1.address);
+            // count larger than the list — should not revert
+            await payroll.processDuePayments(0, 9999);
+            const after = await ethers.provider.getBalance(employee1.address);
+
+            expect(after - before).to.equal(WAGE);
         });
     });
 

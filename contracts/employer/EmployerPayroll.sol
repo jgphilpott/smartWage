@@ -147,25 +147,36 @@ contract EmployerPayroll {
         require(address(this).balance >= emp.wageWei, "EmployerPayroll: insufficient balance");
 
         emp.lastPaid = block.timestamp;
-        payable(addr).transfer(emp.wageWei);
+        (bool success, ) = payable(addr).call{value: emp.wageWei}("");
+        require(success, "EmployerPayroll: transfer failed");
 
         emit PaymentSent(addr, emp.wageWei, block.timestamp);
     }
 
     /**
-     * @notice Process all overdue scheduled payments.
+     * @notice Process a batch of overdue scheduled payments.
      *         Can be called by anyone (employer, keeper, cron bot, etc.).
      *         Skips employees where the balance is insufficient rather than reverting,
-     *         so partial runs are possible.
+     *         so partial runs are possible.  Use pagination to avoid hitting block gas
+     *         limits as the employee list grows.
+     * @param start Index of the first employee in _employeeList to process.
+     * @param count Maximum number of employees to process in this call.
      */
-    function processDuePayments() external {
+    function processDuePayments(uint256 start, uint256 count) external {
         uint256 len = _employeeList.length;
-        for (uint256 i = 0; i < len; ) {
+        uint256 end = start + count;
+        if (end > len) end = len;
+        for (uint256 i = start; i < end; ) {
             Employee storage emp = _employees[_employeeList[i]];
             if (emp.active && _isDue(emp) && address(this).balance >= emp.wageWei) {
+                uint256 prevLastPaid = emp.lastPaid;
                 emp.lastPaid = block.timestamp;
-                payable(emp.addr).transfer(emp.wageWei);
-                emit PaymentSent(emp.addr, emp.wageWei, block.timestamp);
+                (bool ok, ) = payable(emp.addr).call{value: emp.wageWei}("");
+                if (ok) {
+                    emit PaymentSent(emp.addr, emp.wageWei, block.timestamp);
+                } else {
+                    emp.lastPaid = prevLastPaid;
+                }
             }
             unchecked { ++i; }
         }
@@ -181,7 +192,8 @@ contract EmployerPayroll {
         require(amount > 0, "EmployerPayroll: bonus must be > 0");
         require(address(this).balance >= amount, "EmployerPayroll: insufficient balance");
 
-        payable(addr).transfer(amount);
+        (bool success, ) = payable(addr).call{value: amount}("");
+        require(success, "EmployerPayroll: transfer failed");
         emit BonusSent(addr, amount);
     }
 
