@@ -52,7 +52,7 @@
             </section>
 
             <section id="no-metamask" class="card" style="display:none;text-align:center;margin-top:2rem">
-                <p style="color:var(--text-muted);margin-bottom:1rem">
+                <p id="no-metamask-msg" style="color:var(--text-muted);margin-bottom:1rem">
                     MetaMask is required to use smartWage.
                 </p>
                 <a href="https://metamask.io/download/" target="_blank" class="btn btn-primary">
@@ -80,7 +80,16 @@
                 const heroBtn = document.getElementById("connect-btn-hero");
                 heroBtn.addEventListener("click", async () => {
                     if (typeof window.ethereum === "undefined") {
-                        document.getElementById("no-metamask").style.display = "block";
+                        const noMetaMask = document.getElementById("no-metamask");
+                        const msg = document.getElementById("no-metamask-msg");
+                        if (window.location.protocol === "file:") {
+                            msg.textContent =
+                                "MetaMask cannot inject into file:// pages. " +
+                                "Please serve the app over http:// or visit the live site at https://jgphilpott.github.io/smartWage.";
+                        } else {
+                            msg.textContent = "MetaMask is required to use smartWage.";
+                        }
+                        noMetaMask.style.display = "block";
                         return;
                     }
                     const ok = await connectWallet();

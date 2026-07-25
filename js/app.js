@@ -50,7 +50,15 @@ function showToast(message, type = "info", durationMs = 4000) {
 
 async function connectWallet() {
     if (typeof window.ethereum === "undefined") {
-        showToast("MetaMask is not installed. Please install it to use smartWage.", "error", 6000);
+        if (window.location.protocol === "file:") {
+            showToast(
+                "MetaMask cannot inject into file:// pages. Please serve the app over http:// or visit the live site.",
+                "error",
+                8000
+            );
+        } else {
+            showToast("MetaMask is not installed. Please install it to use smartWage.", "error", 6000);
+        }
         return false;
     }
 
