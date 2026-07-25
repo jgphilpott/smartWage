@@ -47,13 +47,6 @@ function getContract(address) {
     return new ethers.Contract(address, EMPLOYER_ABI, signer);
 }
 
-async function deployContract() {
-    const factory = new ethers.ContractFactory(EMPLOYER_ABI, BYTECODE_EMPLOYER, signer);
-    const contract = await factory.deploy();
-    await contract.waitForDeployment();
-    return contract;
-}
-
 // ─────────────────────────────────────────────────────────────
 //  UI rendering
 // ─────────────────────────────────────────────────────────────

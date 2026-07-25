@@ -224,6 +224,9 @@ function showSetup() {
 // ─────────────────────────────────────────────────────────────
 
 async function onWalletReady() {
+    const el = document.getElementById("user-addr-display");
+    if (el) el.textContent = userAddress;
+
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
         document.getElementById("portal-addr-input").value = saved;

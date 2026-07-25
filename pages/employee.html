@@ -160,14 +160,6 @@
         event.target.classList.add("active");
         document.getElementById(tabId).classList.add("active");
     }
-
-    // Show user's address in the stats bar after wallet connects
-    const _origOnWalletReady = typeof onWalletReady === "function" ? onWalletReady : null;
-    async function onWalletReady() {
-        const el = document.getElementById("user-addr-display");
-        if (el) el.textContent = userAddress;
-        if (_origOnWalletReady) await _origOnWalletReady();
-    }
 </script>
 </body>
 </html>
