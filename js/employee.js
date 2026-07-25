@@ -62,7 +62,7 @@ async function renderContractsTable(employerContracts) {
     }
 
     if (activeContracts.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No employers registered. Add one below.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No employers registered. Add one below.</td></tr>`;
         return;
     }
 
