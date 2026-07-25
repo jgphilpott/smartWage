@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Hardhat build artifacts
+artifacts/
+cache/
+
+# Coverage
+coverage/
+coverage.json
+
+# Environment files
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
