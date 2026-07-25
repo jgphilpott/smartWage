@@ -1,5 +1,5 @@
 {
-  "name": "smartwage",
+  "name": "smartWage",
   "version": "1.0.0",
   "description": "A simple dApp that uses smart contracts to automate the payroll process.",
   "scripts": {

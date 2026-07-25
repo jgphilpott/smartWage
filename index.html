@@ -1,95 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>smartWage — Automated Payroll on Web3</title>
-    <link rel="stylesheet" href="css/styles.css" />
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>smartWage</title>
+        <link rel="stylesheet" href="css/styles.css" />
+    </head>
+    <body>
 
-<header>
-    <span class="logo">smart<span>Wage</span></span>
-    <div class="flex-row">
-        <div id="wallet-status" class="wallet-status">
-            <span class="dot"></span>
-            <span class="status-text">Not connected</span>
-        </div>
-        <span id="wallet-address" class="wallet-address" style="display:none"></span>
-        <button id="connect-btn" class="btn btn-primary">Connect Wallet</button>
-    </div>
-</header>
+        <header>
+            <span class="logo">smart<span>Wage</span></span>
+            <div class="flex-row">
+                <div id="wallet-status" class="wallet-status">
+                    <span class="dot"></span>
+                    <span class="status-text">Not connected</span>
+                </div>
+                <span id="wallet-address" class="wallet-address" style="display:none"></span>
+                <button id="connect-btn" class="btn btn-primary">Connect Wallet</button>
+            </div>
+        </header>
 
-<main>
-    <section class="hero">
-        <h1>Automated Payroll,<br>on the Blockchain</h1>
-        <p>
-            smartWage uses Ethereum smart contracts to automate payroll.
-            Connect your MetaMask wallet to get started as an employer or employee.
-        </p>
-        <button id="connect-btn-hero" class="btn btn-primary" style="font-size:1.1rem;padding:.8rem 2rem">
-            Connect Wallet
-        </button>
-    </section>
+        <main>
+            <section class="hero">
+                <h1>Automated Payroll,<br>on the Blockchain</h1>
+                <p>
+                    smartWage uses Ethereum smart contracts to automate payroll.
+                    Connect your MetaMask wallet to get started as an employer or employee.
+                </p>
+                <button id="connect-btn-hero" class="btn btn-primary" style="font-size:1.1rem;padding:.8rem 2rem">
+                    Connect Wallet
+                </button>
+            </section>
 
-    <section id="contract-chooser" style="display:none">
-        <h2 style="text-align:center;font-size:1.4rem;margin-bottom:.5rem">What are you here for?</h2>
-        <p style="text-align:center;color:var(--text-muted);margin-bottom:1rem">
-            Choose the role that matches how you'll use smartWage.
-        </p>
-        <div class="contract-grid">
-            <a href="pages/employer.html" class="contract-card" style="text-decoration:none;color:inherit">
-                <div class="icon">🏢</div>
-                <h3>Employer</h3>
-                <p>Register employees, set wages &amp; pay schedules, send bonuses, and fund your payroll contract.</p>
-            </a>
-            <a href="pages/employee.html" class="contract-card" style="text-decoration:none;color:inherit">
-                <div class="icon">👤</div>
-                <h3>Employee</h3>
-                <p>Track your employers, view your contract details, and browse your full pay history.</p>
-            </a>
-        </div>
-    </section>
+            <section id="contract-chooser" style="display:none">
+                <h2 style="text-align:center;font-size:1.4rem;margin-bottom:.5rem">What are you here for?</h2>
+                <p style="text-align:center;color:var(--text-muted);margin-bottom:1rem">
+                    Choose the role that matches how you'll use smartWage.
+                </p>
+                <div class="contract-grid">
+                    <a href="pages/employer.html" class="contract-card" style="text-decoration:none;color:inherit">
+                        <div class="icon">🏢</div>
+                        <h3>Employer</h3>
+                        <p>Register employees, set wages &amp; pay schedules, send bonuses, and fund your payroll contract.</p>
+                    </a>
+                    <a href="pages/employee.html" class="contract-card" style="text-decoration:none;color:inherit">
+                        <div class="icon">👤</div>
+                        <h3>Employee</h3>
+                        <p>Track your employers, view your contract details, and browse your full pay history.</p>
+                    </a>
+                </div>
+            </section>
 
-    <section id="no-metamask" class="card" style="display:none;text-align:center;margin-top:2rem">
-        <p style="color:var(--text-muted);margin-bottom:1rem">
-            MetaMask is required to use smartWage.
-        </p>
-        <a href="https://metamask.io/download/" target="_blank" class="btn btn-primary">
-            Install MetaMask
-        </a>
-    </section>
-</main>
+            <section id="no-metamask" class="card" style="display:none;text-align:center;margin-top:2rem">
+                <p style="color:var(--text-muted);margin-bottom:1rem">
+                    MetaMask is required to use smartWage.
+                </p>
+                <a href="https://metamask.io/download/" target="_blank" class="btn btn-primary">
+                    Install MetaMask
+                </a>
+            </section>
+        </main>
 
-<footer>
-    <p>smartWage &mdash; open source payroll automation on Ethereum</p>
-</footer>
+        <footer>
+            <p>smartWage &mdash; open source payroll automation on Ethereum</p>
+        </footer>
 
-<div id="notification"></div>
+        <div id="notification"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
-<script src="js/app.js"></script>
-<script>
-    // Override onWalletReady for the landing page
-    async function onWalletReady() {
-        document.getElementById("contract-chooser").style.display = "block";
-        document.querySelector(".hero").style.display = "none";
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const heroBtn = document.getElementById("connect-btn-hero");
-        heroBtn.addEventListener("click", async () => {
-            if (typeof window.ethereum === "undefined") {
-                document.getElementById("no-metamask").style.display = "block";
-                return;
-            }
-            const ok = await connectWallet();
-            if (ok) {
+        <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+        <script src="js/app.js"></script>
+        <script>
+            // Override onWalletReady for the landing page
+            async function onWalletReady() {
                 document.getElementById("contract-chooser").style.display = "block";
                 document.querySelector(".hero").style.display = "none";
             }
-        });
-    });
-</script>
-</body>
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const heroBtn = document.getElementById("connect-btn-hero");
+                heroBtn.addEventListener("click", async () => {
+                    if (typeof window.ethereum === "undefined") {
+                        document.getElementById("no-metamask").style.display = "block";
+                        return;
+                    }
+                    const ok = await connectWallet();
+                    if (ok) {
+                        document.getElementById("contract-chooser").style.display = "block";
+                        document.querySelector(".hero").style.display = "none";
+                    }
+                });
+            });
+        </script>
+    </body>
 </html>
