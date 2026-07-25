@@ -99,7 +99,7 @@ The **Employees** tab lists all registered employees. For each employee you can:
 
 #### Running due payments
 
-Click **⚡ Run Due Payments** to trigger `processDuePayments()`. This is permissionless — anyone (employer, keeper bot, cron job) can call it. Employees whose payment is not yet due, or whose payment cannot be covered by the current balance, are skipped rather than causing the whole transaction to revert.
+Click **⚡ Run Due Payments** to trigger `processDuePayments(start, count)`. This is permissionless — anyone (employer, keeper bot, cron job) can call it. Use pagination (`start` and `count`) to process a bounded slice of the employee list per transaction and avoid block gas-limit issues as the list grows. Employees whose payment is not yet due, or whose payment cannot be covered by the current balance, are skipped rather than causing the whole transaction to revert.
 
 ### EmployerPayroll — Key Functions
 
@@ -116,8 +116,8 @@ removeEmployee(address addr)
 // Manually pay one employee (employer only, ignores schedule)
 payEmployee(address addr)
 
-// Batch-process all overdue payments (permissionless)
-processDuePayments()
+// Batch-process overdue payments for a slice of the employee list (permissionless)
+processDuePayments(uint256 start, uint256 count)
 
 // Send a one-off bonus
 sendBonus(address addr, uint256 amount)
