@@ -75,6 +75,15 @@ async function connectWallet() {
         window.ethereum.on("accountsChanged", handleAccountsChanged);
         window.ethereum.on("chainChanged", () => window.location.reload());
 
+        // Allow per-page initialisation to run after a manual connect
+        try {
+            if (typeof onWalletReady === "function") {
+                await onWalletReady();
+            }
+        } catch (e) {
+            console.error("onWalletReady failed", e);
+        }
+
         return true;
     } catch (err) {
         const msg = err.code === 4001
