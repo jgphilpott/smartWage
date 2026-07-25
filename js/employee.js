@@ -114,12 +114,13 @@ async function viewPayHistory(contractAddr) {
 
         // Filter PaymentSent events for this employee address
         const filter = employerPayroll.filters.PaymentSent(userAddress);
-        const events = await employerPayroll.queryFilter(filter);
+        const latest = await provider.getBlockNumber();
+        const fromBlock = Math.max(0, latest - 200_000);
+        const events = await employerPayroll.queryFilter(filter, fromBlock, latest);
 
         // Also filter BonusSent events
         const bonusFilter = employerPayroll.filters.BonusSent(userAddress);
-        const bonusEvents = await employerPayroll.queryFilter(bonusFilter);
-
+        const bonusEvents = await employerPayroll.queryFilter(bonusFilter, fromBlock, latest);
         // Combine and sort by block number descending
         const allEvents = [
             ...events.map(e => ({ type: "Salary", amount: e.args.amount, timestamp: e.args.timestamp, block: e.blockNumber })),
