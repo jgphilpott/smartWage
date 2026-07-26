@@ -2,6 +2,7 @@
 node_modules/
 
 # Hardhat build artifacts
+deployed.json
 artifacts/
 cache/
 
