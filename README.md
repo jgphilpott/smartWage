@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="imgs/icon.png" alt="smartWage" width="120" />
+</p>
+
 # smartWage
 
 A simple and free dApp that uses Ethereum smart contracts to automate the payroll process. Employers deploy an on-chain contract to schedule ETH payments to employees; employees track their contracts and pay history through their own portal contract.
