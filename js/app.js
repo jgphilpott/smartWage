@@ -23,6 +23,7 @@ const NETWORKS = {
 let provider = null;
 let signer = null;
 let userAddress = null;
+let isConnecting = false;
 
 // ─────────────────────────────────────────────────────────────
 //  Toast notifications
@@ -49,6 +50,7 @@ function showToast(message, type = "info", durationMs = 4000) {
 // ─────────────────────────────────────────────────────────────
 
 async function connectWallet() {
+    if (isConnecting) return false;
     if (typeof window.ethereum === "undefined") {
         if (window.location.protocol === "file:") {
             showToast(
@@ -62,7 +64,9 @@ async function connectWallet() {
         return false;
     }
 
+    isConnecting = true;
     try {
+        sessionStorage.removeItem("sw_disconnected");
         await window.ethereum.request({ method: "eth_requestAccounts" });
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
@@ -73,7 +77,7 @@ async function connectWallet() {
 
         // Listen for account / network changes
         window.ethereum.on("accountsChanged", handleAccountsChanged);
-        window.ethereum.on("chainChanged", () => window.location.reload());
+        window.ethereum.on("chainChanged", handleChainChanged);
 
         // Allow per-page initialisation to run after a manual connect
         try {
@@ -91,7 +95,27 @@ async function connectWallet() {
             : `Connection failed: ${err.message}`;
         showToast(msg, "error");
         return false;
+    } finally {
+        isConnecting = false;
     }
+}
+
+function disconnectWallet() {
+    if (typeof window.ethereum !== "undefined") {
+        window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+        window.ethereum.removeListener("chainChanged", handleChainChanged);
+    }
+    userAddress = null;
+    signer = null;
+    provider = null;
+    sessionStorage.setItem("sw_disconnected", "1");
+    sessionStorage.setItem("sw_show_disconnected_toast", "1");
+    updateWalletUI(null);
+    window.location.reload();
+}
+
+function handleChainChanged() {
+    window.location.reload();
 }
 
 function handleAccountsChanged(accounts) {
@@ -111,6 +135,35 @@ async function getConnectedAccounts() {
         return await window.ethereum.request({ method: "eth_accounts" });
     } catch {
         return [];
+    }
+}
+
+function copyAddressToClipboard(addr) {
+    if (!addr) return;
+    const fallbackCopy = () => {
+        try {
+            const el = document.createElement("textarea");
+            el.value = addr;
+            el.style.position = "fixed";
+            el.style.opacity = "0";
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand("copy");
+            document.body.removeChild(el);
+            showToast("Address copied to clipboard!", "success", 2000);
+        } catch {
+            showToast("Failed to copy address.", "error", 2000);
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(addr).then(() => {
+            showToast("Address copied to clipboard!", "success", 2000);
+        }).catch(() => {
+            fallbackCopy();
+        });
+    } else {
+        fallbackCopy();
     }
 }
 
@@ -165,13 +218,44 @@ function updateWalletUI(address) {
 
     if (addrEl) {
         addrEl.textContent = address ? shortAddress(address) : "";
-        addrEl.title = address || "";
+        addrEl.title = address ? `${address} — click to copy` : "";
         addrEl.style.display = address ? "inline-block" : "none";
+        if (address) {
+            addrEl.classList.add("wallet-address-clickable");
+            addrEl.setAttribute("role", "button");
+            addrEl.tabIndex = 0;
+            addrEl.setAttribute("aria-label", "Copy wallet address");
+        } else {
+            addrEl.classList.remove("wallet-address-clickable");
+            addrEl.removeAttribute("role");
+            addrEl.removeAttribute("tabindex");
+            addrEl.removeAttribute("aria-label");
+        }
+        addrEl.onclick = address ? () => copyAddressToClipboard(address) : null;
+        addrEl.onkeydown = address
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    copyAddressToClipboard(address);
+                }
+            }
+            : null;
     }
 
     if (connectBtn) {
-        connectBtn.textContent = address ? "Connected ✓" : "Connect Wallet";
-        connectBtn.disabled = !!address;
+        if (address) {
+            connectBtn.textContent = "Disconnect";
+            connectBtn.setAttribute("aria-label", "Disconnect wallet");
+            connectBtn.classList.remove("btn-primary");
+            connectBtn.classList.add("btn-danger");
+            connectBtn.disabled = false;
+        } else {
+            connectBtn.textContent = "Connect Wallet";
+            connectBtn.setAttribute("aria-label", "Connect wallet");
+            connectBtn.classList.remove("btn-danger");
+            connectBtn.classList.add("btn-primary");
+            connectBtn.disabled = false;
+        }
     }
 }
 
@@ -180,6 +264,7 @@ function updateWalletUI(address) {
 // ─────────────────────────────────────────────────────────────
 
 async function tryAutoConnect() {
+    if (sessionStorage.getItem("sw_disconnected")) return false;
     const accounts = await getConnectedAccounts();
     if (accounts.length > 0) {
         provider = new ethers.BrowserProvider(window.ethereum);
@@ -192,10 +277,22 @@ async function tryAutoConnect() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Wire up the connect button if present
+    // Show deferred toast from disconnect
+    if (sessionStorage.getItem("sw_show_disconnected_toast")) {
+        sessionStorage.removeItem("sw_show_disconnected_toast");
+        showToast("Wallet disconnected.", "info");
+    }
+
+    // Wire up the connect/disconnect button if present
     const connectBtn = document.getElementById("connect-btn");
     if (connectBtn) {
-        connectBtn.addEventListener("click", connectWallet);
+        connectBtn.addEventListener("click", () => {
+            if (userAddress) {
+                disconnectWallet();
+            } else {
+                connectWallet();
+            }
+        });
     }
 
     tryAutoConnect().then((connected) => {
