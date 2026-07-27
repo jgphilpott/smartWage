@@ -230,12 +230,12 @@ function updateWalletUI(address) {
             connectBtn.textContent = "Disconnect";
             connectBtn.setAttribute("aria-label", "Disconnect wallet");
             connectBtn.classList.remove("btn-primary");
-            connectBtn.classList.add("btn-ghost");
+            connectBtn.classList.add("btn-danger");
             connectBtn.disabled = false;
         } else {
             connectBtn.textContent = "Connect Wallet";
             connectBtn.setAttribute("aria-label", "Connect wallet");
-            connectBtn.classList.remove("btn-ghost");
+            connectBtn.classList.remove("btn-danger");
             connectBtn.classList.add("btn-primary");
             connectBtn.disabled = false;
         }

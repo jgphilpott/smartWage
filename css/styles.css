@@ -53,7 +53,6 @@ header {
 header .logo {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
     font-size: 1.4rem;
     font-weight: 700;
     color: var(--accent);
@@ -71,8 +70,9 @@ header .logo a {
 }
 
 header .logo .logo-icon {
-    height: 30px;
-    width: 30px;
+    height: 42px;
+    width: 42px;
+    margin: 0 0.5rem;
     object-fit: contain;
 }
 
@@ -123,6 +123,7 @@ footer {
 .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.4rem;
     padding: 0.55rem 1.2rem;
     border: none;
@@ -153,7 +154,7 @@ footer {
 }
 
 .btn-danger:hover {
-    background: #f9bc6a;
+    background: #f75639;
 }
 
 .btn-success {

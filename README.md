@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="imgs/icon.png" alt="smartWage" width="120" />
+  <img src="imgs/icon.png" alt="smartWage" width="188" />
 </p>
 
 # smartWage
