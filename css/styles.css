@@ -325,7 +325,11 @@ tr:hover td {
     transition: border-color 0.15s;
 }
 
-.wallet-address[style*="cursor: pointer"]:hover {
+.wallet-address-clickable {
+    cursor: pointer;
+}
+
+.wallet-address-clickable:hover {
     border-color: var(--accent);
 }
 

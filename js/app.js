@@ -100,8 +100,8 @@ function disconnectWallet() {
     signer = null;
     provider = null;
     sessionStorage.setItem("sw_disconnected", "1");
+    sessionStorage.setItem("sw_show_disconnected_toast", "1");
     updateWalletUI(null);
-    showToast("Wallet disconnected.", "info");
     window.location.reload();
 }
 
@@ -127,11 +127,28 @@ async function getConnectedAccounts() {
 
 function copyAddressToClipboard(addr) {
     if (!addr) return;
-    navigator.clipboard.writeText(addr).then(() => {
-        showToast("Address copied to clipboard!", "success", 2000);
-    }).catch(() => {
-        showToast("Failed to copy address.", "error", 2000);
-    });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(addr).then(() => {
+            showToast("Address copied to clipboard!", "success", 2000);
+        }).catch(() => {
+            showToast("Failed to copy address.", "error", 2000);
+        });
+    } else {
+        // Fallback for non-secure contexts
+        try {
+            const el = document.createElement("textarea");
+            el.value = addr;
+            el.style.position = "fixed";
+            el.style.opacity = "0";
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand("copy");
+            document.body.removeChild(el);
+            showToast("Address copied to clipboard!", "success", 2000);
+        } catch {
+            showToast("Failed to copy address.", "error", 2000);
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -187,7 +204,11 @@ function updateWalletUI(address) {
         addrEl.textContent = address ? shortAddress(address) : "";
         addrEl.title = address ? `${address} — click to copy` : "";
         addrEl.style.display = address ? "inline-block" : "none";
-        addrEl.style.cursor = address ? "pointer" : "";
+        if (address) {
+            addrEl.classList.add("wallet-address-clickable");
+        } else {
+            addrEl.classList.remove("wallet-address-clickable");
+        }
         addrEl.onclick = address ? () => copyAddressToClipboard(address) : null;
     }
 
@@ -224,6 +245,12 @@ async function tryAutoConnect() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Show deferred toast from disconnect
+    if (sessionStorage.getItem("sw_show_disconnected_toast")) {
+        sessionStorage.removeItem("sw_show_disconnected_toast");
+        showToast("Wallet disconnected.", "info");
+    }
+
     // Wire up the connect/disconnect button if present
     const connectBtn = document.getElementById("connect-btn");
     if (connectBtn) {
