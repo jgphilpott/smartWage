@@ -45,13 +45,15 @@
                 <div class="card mt-2">
                     <h2>Deploy Your Employee Portal</h2>
                     <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem">
-                        Each employee deploys their own
-                        <code>EmployeePortal</code> contract once.  After deployment,
-                        paste the address above to manage your employer relationships.
+                        Each employee deploys their own <code>EmployeePortal</code> contract once,
+                        directly from their connected wallet. After deploying you'll be connected automatically.
                     </p>
-                    <p style="color:var(--text-muted);font-size:.9rem">
+                    <div class="flex-row">
+                        <button id="deploy-new-btn" type="button" class="btn btn-success">🚀 Deploy New Employee Portal</button>
+                    </div>
+                    <p style="color:var(--text-muted);font-size:.85rem;margin-top:1rem">
                         The contract source is at
-                        <code>contracts/employee/EmployeePortal.sol</code> in this repository.
+                        <a href="https://github.com/jgphilpott/smartWage/blob/main/contracts/employee/EmployeePortal.sol" target="_blank" rel="noopener noreferrer"><code>contracts/employee/EmployeePortal.sol</code></a> in this repository.
                     </p>
                 </div>
             </div>
@@ -146,7 +148,7 @@
         </main>
 
         <footer>
-            <p>smartWage &mdash; open source payroll automation on Ethereum</p>
+            <p><a href="https://github.com/jgphilpott/smartWage" target="_blank" rel="noopener noreferrer">smartWage</a> &mdash; open source payroll automation on Ethereum</p>
         </footer>
 
         <div id="notification"></div>

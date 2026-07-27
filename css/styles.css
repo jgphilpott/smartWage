@@ -25,15 +25,13 @@ body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     line-height: 1.6;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 a {
     color: var(--accent);
     text-decoration: none;
-}
-
-a:hover {
-    color: var(--accent-hover);
 }
 
 /* ── Layout ──────────────────────────────────── */
@@ -66,7 +64,6 @@ header .logo span {
 header .logo a {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
 }
 
 header .logo .logo-icon {
@@ -80,6 +77,8 @@ main {
     max-width: 960px;
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
+    flex: 1 0 auto;
+    width: 100%;
 }
 
 main.wide {
@@ -92,6 +91,15 @@ footer {
     color: var(--text-muted);
     font-size: 0.85rem;
     border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+footer a {
+    color: var(--text-muted);
+}
+
+footer a:hover {
+    color: var(--accent);
 }
 
 /* ── Cards ───────────────────────────────────── */

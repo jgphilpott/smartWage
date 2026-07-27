@@ -68,13 +68,16 @@
                 <div class="card mt-2">
                     <h2>Deploy a New Payroll Contract</h2>
                     <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem">
-                        If you don't have a contract yet, deploy a fresh
-                        <code>EmployerPayroll</code> contract using Remix, Hardhat, or another
-                        deployment tool, then paste the address above.
+                        Don't have a contract yet? Deploy a fresh
+                        <code>EmployerPayroll</code> contract directly from your connected wallet —
+                        you'll be the owner/employer and can start registering employees right away.
                     </p>
-                    <p style="color:var(--text-muted);font-size:.9rem">
+                    <div class="flex-row">
+                        <button id="deploy-new-btn" type="button" class="btn btn-success">🚀 Deploy New Payroll Contract</button>
+                    </div>
+                    <p style="color:var(--text-muted);font-size:.85rem;margin-top:1rem">
                         The contract source is at
-                        <code>contracts/employer/EmployerPayroll.sol</code> in this repository.
+                        <a href="https://github.com/jgphilpott/smartWage/blob/main/contracts/employer/EmployerPayroll.sol" target="_blank" rel="noopener noreferrer"><code>contracts/employer/EmployerPayroll.sol</code></a> in this repository.
                     </p>
                 </div>
             </div>
@@ -221,7 +224,7 @@
         </div>
 
         <footer>
-            <p>smartWage &mdash; open source payroll automation on Ethereum</p>
+            <p><a href="https://github.com/jgphilpott/smartWage" target="_blank" rel="noopener noreferrer">smartWage</a> &mdash; open source payroll automation on Ethereum</p>
         </footer>
 
         <div id="notification"></div>
