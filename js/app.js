@@ -227,12 +227,14 @@ function updateWalletUI(address) {
 
     if (connectBtn) {
         if (address) {
-            connectBtn.textContent = "⏏ Disconnect";
+            connectBtn.textContent = "Disconnect";
+            connectBtn.setAttribute("aria-label", "Disconnect wallet");
             connectBtn.classList.remove("btn-primary");
             connectBtn.classList.add("btn-ghost");
             connectBtn.disabled = false;
         } else {
             connectBtn.textContent = "Connect Wallet";
+            connectBtn.setAttribute("aria-label", "Connect wallet");
             connectBtn.classList.remove("btn-ghost");
             connectBtn.classList.add("btn-primary");
             connectBtn.disabled = false;
@@ -268,7 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const connectBtn = document.getElementById("connect-btn");
     if (connectBtn) {
         connectBtn.addEventListener("click", () => {
-            if (isConnecting) return;
             if (userAddress) {
                 disconnectWallet();
             } else {
