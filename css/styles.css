@@ -19,6 +19,10 @@
     padding: 0;
 }
 
+*::-webkit-scrollbar {
+    display: none;
+}
+
 body {
     background: var(--bg);
     color: var(--text);

@@ -207,6 +207,15 @@ async function connectToContract(address) {
 //  Employee actions
 // ─────────────────────────────────────────────────────────────
 
+function showRegisterForm() {
+    document.getElementById("register-card").style.display = "block";
+}
+
+function hideRegisterForm() {
+    document.getElementById("register-card").style.display = "none";
+    document.getElementById("register-form").reset();
+}
+
 async function handleRegisterEmployee(e) {
     e.preventDefault();
     const addr = document.getElementById("reg-addr").value.trim();
@@ -226,7 +235,7 @@ async function handleRegisterEmployee(e) {
         );
         await tx.wait();
         showToast("Employee registered successfully!", "success");
-        e.target.reset();
+        hideRegisterForm();
         await refreshDashboard();
     } catch (err) {
         showToast(err.reason || err.message, "error");
@@ -397,6 +406,10 @@ async function onWalletReady() {
 
     // Register employee form
     document.getElementById("register-form").addEventListener("submit", handleRegisterEmployee);
+
+    // Toggle the register-employee form
+    document.getElementById("show-register-btn").addEventListener("click", showRegisterForm);
+    document.getElementById("hide-register-btn").addEventListener("click", hideRegisterForm);
 
     // Deposit form
     document.getElementById("deposit-form").addEventListener("submit", handleDeposit);
