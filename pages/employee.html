@@ -76,13 +76,15 @@
                 <!-- Tabs -->
                 <div class="tabs mt-2">
                     <button class="tab active" onclick="switchTab(event,'tab-employers')">My Employers</button>
-                    <button class="tab" onclick="switchTab(event,'tab-add')">Add Employer</button>
                 </div>
 
                 <!-- Employers tab -->
                 <div id="tab-employers" class="tab-panel active">
                     <div class="card">
-                        <h2>Registered Employers</h2>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                            <h2 style="margin-bottom:0">Registered Employers</h2>
+                            <button id="show-add-employer-btn" type="button" class="btn btn-primary btn-sm">+ Add Employer</button>
+                        </div>
                         <div class="table-wrap">
                             <table>
                                 <thead>
@@ -102,12 +104,13 @@
                             </table>
                         </div>
                     </div>
-                </div>
 
-                <!-- Add employer tab -->
-                <div id="tab-add" class="tab-panel">
-                    <div class="card">
-                        <h2>Register an Employer Contract</h2>
+                    <!-- Add employer form (hidden by default) -->
+                    <div id="add-employer-card" class="card mt-2" style="display:none">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                            <h2 style="margin-bottom:0">Register an Employer Contract</h2>
+                            <button id="hide-add-employer-btn" type="button" class="btn btn-ghost btn-sm">✕ Cancel</button>
+                        </div>
                         <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem">
                             Ask your employer for their payroll contract address, then add it here
                             to track your contract details and pay history.

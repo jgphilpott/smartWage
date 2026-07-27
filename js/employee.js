@@ -157,6 +157,15 @@ async function viewPayHistory(contractAddr) {
 //  Employer management
 // ─────────────────────────────────────────────────────────────
 
+function showAddEmployerForm() {
+    document.getElementById("add-employer-card").style.display = "block";
+}
+
+function hideAddEmployerForm() {
+    document.getElementById("add-employer-card").style.display = "none";
+    document.getElementById("register-employer-form").reset();
+}
+
 async function handleRegisterEmployer(e) {
     e.preventDefault();
     const addr = document.getElementById("employer-contract-input").value.trim();
@@ -170,7 +179,7 @@ async function handleRegisterEmployer(e) {
         const tx = await portalContract.registerEmployer(addr);
         await tx.wait();
         showToast("Employer registered!", "success");
-        e.target.reset();
+        hideAddEmployerForm();
         await refreshDashboard();
     } catch (err) {
         showToast(err.reason || err.message, "error");
@@ -318,6 +327,10 @@ async function onWalletReady() {
     }
 
     document.getElementById("register-employer-form").addEventListener("submit", handleRegisterEmployer);
+
+    // Toggle the add-employer form
+    document.getElementById("show-add-employer-btn").addEventListener("click", showAddEmployerForm);
+    document.getElementById("hide-add-employer-btn").addEventListener("click", hideAddEmployerForm);
 
     document.getElementById("disconnect-btn").addEventListener("click", showSetup);
     document.getElementById("refresh-btn").addEventListener("click", refreshDashboard);
