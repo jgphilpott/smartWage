@@ -64,6 +64,12 @@ header .logo span {
     color: var(--text);
 }
 
+header .logo a {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
 header .logo .logo-icon {
     height: 30px;
     width: 30px;
