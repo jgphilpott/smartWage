@@ -140,14 +140,7 @@ async function getConnectedAccounts() {
 
 function copyAddressToClipboard(addr) {
     if (!addr) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(addr).then(() => {
-            showToast("Address copied to clipboard!", "success", 2000);
-        }).catch(() => {
-            showToast("Failed to copy address.", "error", 2000);
-        });
-    } else {
-        // Fallback for non-secure contexts
+    const fallbackCopy = () => {
         try {
             const el = document.createElement("textarea");
             el.value = addr;
@@ -161,6 +154,16 @@ function copyAddressToClipboard(addr) {
         } catch {
             showToast("Failed to copy address.", "error", 2000);
         }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(addr).then(() => {
+            showToast("Address copied to clipboard!", "success", 2000);
+        }).catch(() => {
+            fallbackCopy();
+        });
+    } else {
+        fallbackCopy();
     }
 }
 
@@ -219,10 +222,24 @@ function updateWalletUI(address) {
         addrEl.style.display = address ? "inline-block" : "none";
         if (address) {
             addrEl.classList.add("wallet-address-clickable");
+            addrEl.setAttribute("role", "button");
+            addrEl.tabIndex = 0;
+            addrEl.setAttribute("aria-label", "Copy wallet address");
         } else {
             addrEl.classList.remove("wallet-address-clickable");
+            addrEl.removeAttribute("role");
+            addrEl.removeAttribute("tabindex");
+            addrEl.removeAttribute("aria-label");
         }
         addrEl.onclick = address ? () => copyAddressToClipboard(address) : null;
+        addrEl.onkeydown = address
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    copyAddressToClipboard(address);
+                }
+            }
+            : null;
     }
 
     if (connectBtn) {
