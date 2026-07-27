@@ -112,6 +112,7 @@ async function refreshDashboard() {
         addrDisplay.onclick = () => copyAddressToClipboard(contractAddress);
 
         await renderEmployeeTable(employeeList);
+        await loadFundsHistory();
     } catch (err) {
         showToast("Failed to load contract data: " + err.message, "error");
     }
@@ -151,6 +152,60 @@ async function renderEmployeeTable(addresses) {
             </td>
         `;
         tbody.appendChild(tr);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Funds history (deposits + payouts)
+// ─────────────────────────────────────────────────────────────
+
+async function loadFundsHistory() {
+    const tbody = document.getElementById("funds-history-tbody");
+    if (!tbody || !payrollContract) return;
+
+    tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Loading…</td></tr>`;
+
+    try {
+        const latest = await provider.getBlockNumber();
+        const fromBlock = Math.max(0, latest - 200_000);
+
+        const [depositEvents, paymentEvents, bonusEvents] = await Promise.all([
+            payrollContract.queryFilter(payrollContract.filters.FundsDeposited(), fromBlock, latest),
+            payrollContract.queryFilter(payrollContract.filters.PaymentSent(), fromBlock, latest),
+            payrollContract.queryFilter(payrollContract.filters.BonusSent(), fromBlock, latest)
+        ]);
+
+        const allEvents = [
+            ...depositEvents.map(e => ({ type: "Deposit", addr: e.args.from, amount: e.args.amount, block: e.blockNumber })),
+            ...paymentEvents.map(e => ({ type: "Payment", addr: e.args.employee, amount: e.args.amount, block: e.blockNumber })),
+            ...bonusEvents.map(e => ({ type: "Bonus", addr: e.args.employee, amount: e.args.amount, block: e.blockNumber }))
+        ].sort((a, b) => b.block - a.block);
+
+        if (allEvents.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No funds activity found.</td></tr>`;
+            return;
+        }
+
+        // Resolve block timestamps (dedupe to avoid redundant RPC calls)
+        const blockNumbers = [...new Set(allEvents.map(e => e.block))];
+        const blocks = await Promise.all(blockNumbers.map(bn => provider.getBlock(bn)));
+        const tsByBlock = Object.fromEntries(blocks.map(b => [b.number, b.timestamp]));
+
+        tbody.innerHTML = "";
+        for (const ev of allEvents) {
+            const isDeposit = ev.type === "Deposit";
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><span class="badge ${isDeposit ? "badge-success" : "badge-danger"}">${isDeposit ? "↓ Deposit" : (ev.type === "Payment" ? "↑ Payment" : "↑ Bonus")}</span></td>
+                <td><span class="truncate" title="${ev.addr}">${shortAddress(ev.addr)}</span></td>
+                <td>${formatWei(ev.amount)}</td>
+                <td>${formatTimestamp(tsByBlock[ev.block])}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+    } catch (err) {
+        console.error("loadFundsHistory failed:", err);
+        tbody.innerHTML = `<tr><td colspan="4" style="color:var(--accent-danger)">Error loading funds activity: ${err.message}</td></tr>`;
     }
 }
 
@@ -280,6 +335,15 @@ async function handleRemoveEmployee(addr) {
     }
 }
 
+function showDepositForm() {
+    document.getElementById("deposit-card").style.display = "block";
+}
+
+function hideDepositForm() {
+    document.getElementById("deposit-card").style.display = "none";
+    document.getElementById("deposit-form").reset();
+}
+
 async function handleDeposit(e) {
     e.preventDefault();
     const ethAmount = document.getElementById("deposit-amount").value;
@@ -288,7 +352,7 @@ async function handleDeposit(e) {
         const tx = await payrollContract.deposit({ value: ethers.parseEther(ethAmount) });
         await tx.wait();
         showToast("Funds deposited!", "success");
-        e.target.reset();
+        hideDepositForm();
         await refreshDashboard();
     } catch (err) {
         showToast(err.reason || err.message, "error");
@@ -413,6 +477,13 @@ async function onWalletReady() {
 
     // Deposit form
     document.getElementById("deposit-form").addEventListener("submit", handleDeposit);
+
+    // Toggle the deposit-funds form
+    document.getElementById("show-deposit-btn").addEventListener("click", showDepositForm);
+    document.getElementById("hide-deposit-btn").addEventListener("click", hideDepositForm);
+
+    // Funds activity history refresh
+    document.getElementById("refresh-funds-history-btn").addEventListener("click", loadFundsHistory);
 
     // Process due payments button
     document.getElementById("process-due-btn").addEventListener("click", handleProcessDue);

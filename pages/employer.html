@@ -105,7 +105,7 @@
                 <!-- Tabs -->
                 <div class="tabs mt-2">
                     <button class="tab active" onclick="switchTab(event,'tab-employees')">Employees</button>
-                    <button class="tab" onclick="switchTab(event,'tab-deposit')">Fund Contract</button>
+                    <button class="tab" onclick="switchTab(event,'tab-deposit')">Funds</button>
                 </div>
 
                 <!-- Employees tab -->
@@ -171,7 +171,39 @@
                 <!-- Deposit tab -->
                 <div id="tab-deposit" class="tab-panel">
                     <div class="card">
-                        <h2>Deposit Funds</h2>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                            <h2 style="margin-bottom:0">Funds Activity</h2>
+                            <div class="flex-row" style="gap:.5rem">
+                                <button id="show-deposit-btn" type="button" class="btn btn-primary btn-sm">+ Deposit Funds</button>
+                                <button id="refresh-funds-history-btn" type="button" class="btn btn-ghost btn-sm">↺ Refresh</button>
+                            </div>
+                        </div>
+                        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1rem">
+                            On-chain record of every deposit into, and payment/bonus out of, this contract.
+                        </p>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Address</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="funds-history-tbody">
+                                    <tr><td colspan="4" class="empty-state">Loading…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Deposit funds form (hidden by default) -->
+                    <div id="deposit-card" class="card mt-2" style="display:none">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                            <h2 style="margin-bottom:0">Deposit Funds</h2>
+                            <button id="hide-deposit-btn" type="button" class="btn btn-ghost btn-sm">✕ Cancel</button>
+                        </div>
                         <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem">
                             Add ETH to your payroll contract to fund employee payments.
                         </p>
