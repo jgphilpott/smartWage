@@ -294,7 +294,11 @@ function showSetup() {
 
 async function onWalletReady() {
     const el = document.getElementById("user-addr-display");
-    if (el) el.textContent = userAddress;
+    if (el) {
+        el.textContent = userAddress;
+        el.title = "Click to copy";
+        el.onclick = () => copyAddressToClipboard(userAddress);
+    }
 
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {

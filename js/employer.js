@@ -106,8 +106,10 @@ async function refreshDashboard() {
         ]);
 
         document.getElementById("contract-balance").textContent = formatWei(balance);
-        document.getElementById("contract-address-display").textContent = contractAddress;
-        document.getElementById("contract-address-display").title = contractAddress;
+        const addrDisplay = document.getElementById("contract-address-display");
+        addrDisplay.textContent = contractAddress;
+        addrDisplay.title = "Click to copy";
+        addrDisplay.onclick = () => copyAddressToClipboard(contractAddress);
 
         await renderEmployeeTable(employeeList);
     } catch (err) {
