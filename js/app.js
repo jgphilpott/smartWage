@@ -63,6 +63,7 @@ async function connectWallet() {
     }
 
     try {
+        sessionStorage.removeItem("sw_disconnected");
         await window.ethereum.request({ method: "eth_requestAccounts" });
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
@@ -94,6 +95,16 @@ async function connectWallet() {
     }
 }
 
+function disconnectWallet() {
+    userAddress = null;
+    signer = null;
+    provider = null;
+    sessionStorage.setItem("sw_disconnected", "1");
+    updateWalletUI(null);
+    showToast("Wallet disconnected.", "info");
+    window.location.reload();
+}
+
 function handleAccountsChanged(accounts) {
     if (accounts.length === 0) {
         showToast("Wallet disconnected.", "info");
@@ -112,6 +123,15 @@ async function getConnectedAccounts() {
     } catch {
         return [];
     }
+}
+
+function copyAddressToClipboard(addr) {
+    if (!addr) return;
+    navigator.clipboard.writeText(addr).then(() => {
+        showToast("Address copied to clipboard!", "success", 2000);
+    }).catch(() => {
+        showToast("Failed to copy address.", "error", 2000);
+    });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -165,13 +185,24 @@ function updateWalletUI(address) {
 
     if (addrEl) {
         addrEl.textContent = address ? shortAddress(address) : "";
-        addrEl.title = address || "";
+        addrEl.title = address ? `${address} — click to copy` : "";
         addrEl.style.display = address ? "inline-block" : "none";
+        addrEl.style.cursor = address ? "pointer" : "";
+        addrEl.onclick = address ? () => copyAddressToClipboard(address) : null;
     }
 
     if (connectBtn) {
-        connectBtn.textContent = address ? "Connected ✓" : "Connect Wallet";
-        connectBtn.disabled = !!address;
+        if (address) {
+            connectBtn.textContent = "⏏ Disconnect";
+            connectBtn.classList.remove("btn-primary");
+            connectBtn.classList.add("btn-ghost");
+            connectBtn.disabled = false;
+        } else {
+            connectBtn.textContent = "Connect Wallet";
+            connectBtn.classList.remove("btn-ghost");
+            connectBtn.classList.add("btn-primary");
+            connectBtn.disabled = false;
+        }
     }
 }
 
@@ -180,6 +211,7 @@ function updateWalletUI(address) {
 // ─────────────────────────────────────────────────────────────
 
 async function tryAutoConnect() {
+    if (sessionStorage.getItem("sw_disconnected")) return false;
     const accounts = await getConnectedAccounts();
     if (accounts.length > 0) {
         provider = new ethers.BrowserProvider(window.ethereum);
@@ -192,10 +224,16 @@ async function tryAutoConnect() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Wire up the connect button if present
+    // Wire up the connect/disconnect button if present
     const connectBtn = document.getElementById("connect-btn");
     if (connectBtn) {
-        connectBtn.addEventListener("click", connectWallet);
+        connectBtn.addEventListener("click", () => {
+            if (userAddress) {
+                disconnectWallet();
+            } else {
+                connectWallet();
+            }
+        });
     }
 
     tryAutoConnect().then((connected) => {

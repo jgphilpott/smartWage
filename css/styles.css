@@ -67,6 +67,10 @@ main {
     padding: 2rem 1.5rem 4rem;
 }
 
+main.wide {
+    max-width: 1440px;
+}
+
 footer {
     text-align: center;
     padding: 1.5rem;
@@ -318,6 +322,11 @@ tr:hover td {
     padding: 0.2rem 0.5rem;
     border-radius: 6px;
     border: 1px solid var(--border);
+    transition: border-color 0.15s;
+}
+
+.wallet-address[style*="cursor: pointer"]:hover {
+    border-color: var(--accent);
 }
 
 /* ── Contract type cards ─────────────────────── */
