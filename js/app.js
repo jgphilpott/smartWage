@@ -23,6 +23,7 @@ const NETWORKS = {
 let provider = null;
 let signer = null;
 let userAddress = null;
+let isConnecting = false;
 
 // ─────────────────────────────────────────────────────────────
 //  Toast notifications
@@ -49,6 +50,7 @@ function showToast(message, type = "info", durationMs = 4000) {
 // ─────────────────────────────────────────────────────────────
 
 async function connectWallet() {
+    if (isConnecting) return false;
     if (typeof window.ethereum === "undefined") {
         if (window.location.protocol === "file:") {
             showToast(
@@ -62,6 +64,7 @@ async function connectWallet() {
         return false;
     }
 
+    isConnecting = true;
     try {
         sessionStorage.removeItem("sw_disconnected");
         await window.ethereum.request({ method: "eth_requestAccounts" });
@@ -74,7 +77,7 @@ async function connectWallet() {
 
         // Listen for account / network changes
         window.ethereum.on("accountsChanged", handleAccountsChanged);
-        window.ethereum.on("chainChanged", () => window.location.reload());
+        window.ethereum.on("chainChanged", handleChainChanged);
 
         // Allow per-page initialisation to run after a manual connect
         try {
@@ -92,16 +95,26 @@ async function connectWallet() {
             : `Connection failed: ${err.message}`;
         showToast(msg, "error");
         return false;
+    } finally {
+        isConnecting = false;
     }
 }
 
 function disconnectWallet() {
+    if (typeof window.ethereum !== "undefined") {
+        window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+        window.ethereum.removeListener("chainChanged", handleChainChanged);
+    }
     userAddress = null;
     signer = null;
     provider = null;
     sessionStorage.setItem("sw_disconnected", "1");
     sessionStorage.setItem("sw_show_disconnected_toast", "1");
     updateWalletUI(null);
+    window.location.reload();
+}
+
+function handleChainChanged() {
     window.location.reload();
 }
 
@@ -255,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const connectBtn = document.getElementById("connect-btn");
     if (connectBtn) {
         connectBtn.addEventListener("click", () => {
+            if (isConnecting) return;
             if (userAddress) {
                 disconnectWallet();
             } else {
