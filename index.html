@@ -16,7 +16,7 @@
                     <span class="dot"></span>
                     <span class="status-text">Not connected</span>
                 </div>
-                <span id="wallet-address" class="wallet-address" style="display:none"></span>
+                <span id="wallet-address" class="wallet-address hide"></span>
                 <button id="connect-btn" class="btn btn-primary">Connect Wallet</button>
             </div>
         </header>
@@ -28,23 +28,23 @@
                     smartWage uses Ethereum smart contracts to automate payroll.
                     Connect your MetaMask wallet to get started as an employer or employee.
                 </p>
-                <button id="connect-btn-hero" class="btn btn-primary" style="font-size:1.1rem;padding:.8rem 2rem">
+                <button id="connect-btn-hero" class="btn btn-primary hero-btn-size">
                     Connect Wallet
                 </button>
             </section>
 
-            <section id="contract-chooser" style="display:none">
-                <h2 style="text-align:center;font-size:1.4rem;margin-bottom:.5rem">What are you here for?</h2>
-                <p style="text-align:center;color:var(--text-muted);margin-bottom:1rem">
+            <section id="contract-chooser" class="hide">
+                <h2 class="center-text mb-1 text-lg">What are you here for?</h2>
+                <p class="center-text muted-sm mb-2">
                     Choose the role that matches how you'll use smartWage.
                 </p>
                 <div class="contract-grid">
-                    <a href="pages/employer.html" class="contract-card" style="text-decoration:none;color:inherit">
+                    <a href="pages/employer.html" class="contract-card no-underline">
                         <div class="icon">🏢</div>
                         <h3>Employer</h3>
                         <p>Register employees, set wages &amp; pay schedules, send bonuses, and fund your payroll contract.</p>
                     </a>
-                    <a href="pages/employee.html" class="contract-card" style="text-decoration:none;color:inherit">
+                    <a href="pages/employee.html" class="contract-card no-underline">
                         <div class="icon">👤</div>
                         <h3>Employee</h3>
                         <p>Track your employers, view your contract details, and browse your full pay history.</p>
@@ -52,8 +52,8 @@
                 </div>
             </section>
 
-            <section id="no-metamask" class="card" style="display:none;text-align:center;margin-top:2rem">
-                <p id="no-metamask-msg" style="color:var(--text-muted);margin-bottom:1rem">
+            <section id="no-metamask" class="card hide center-text mt-4">
+                <p id="no-metamask-msg" class="muted-sm mb-2">
                     MetaMask is required to use smartWage.
                 </p>
                 <a href="https://metamask.io/download/" target="_blank" class="btn btn-primary">
@@ -73,8 +73,8 @@
         <script>
             // Override onWalletReady for the landing page
             async function onWalletReady() {
-                document.getElementById("contract-chooser").style.display = "block";
-                document.querySelector(".hero").style.display = "none";
+                document.getElementById("contract-chooser").classList.remove("hide");
+                document.querySelector(".hero").classList.add("hide");
             }
 
             document.addEventListener("DOMContentLoaded", () => {
@@ -90,13 +90,13 @@
                         } else {
                             msg.textContent = "MetaMask is required to use smartWage.";
                         }
-                        noMetaMask.style.display = "block";
+                        noMetaMask.classList.remove("hide");
                         return;
                     }
                     const ok = await connectWallet();
                     if (ok) {
-                        document.getElementById("contract-chooser").style.display = "block";
-                        document.querySelector(".hero").style.display = "none";
+                        document.getElementById("contract-chooser").classList.remove("hide");
+                        document.querySelector(".hero").classList.add("hide");
                     }
                 });
             });

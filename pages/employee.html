@@ -16,13 +16,13 @@
                     <span class="dot"></span>
                     <span class="status-text">Not connected</span>
                 </div>
-                <span id="wallet-address" class="wallet-address" style="display:none"></span>
+                <span id="wallet-address" class="wallet-address hide"></span>
                 <button id="connect-btn" class="btn btn-primary">Connect Wallet</button>
             </div>
         </header>
 
         <main class="wide">
-            <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:1.5rem">👤 Employee Dashboard</h1>
+            <h1 class="page-title">👤 Employee Dashboard</h1>
 
             <!-- ── Setup section ──────────────────────────── -->
             <div id="setup-section">
@@ -44,14 +44,14 @@
 
                 <div class="card mt-2">
                     <h2>Deploy Your Employee Portal</h2>
-                    <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem">
+                    <p class="muted-sm">
                         Each employee deploys their own <code>EmployeePortal</code> contract once,
                         directly from their connected wallet. After deploying you'll be connected automatically.
                     </p>
                     <div class="flex-row">
                         <button id="deploy-new-btn" type="button" class="btn btn-success">🚀 Deploy New Employee Portal</button>
                     </div>
-                    <p style="color:var(--text-muted);font-size:.85rem;margin-top:1rem">
+                    <p class="muted-xs mt-2">
                         The contract source is at
                         <a href="https://github.com/jgphilpott/smartWage/blob/main/contracts/employee/EmployeePortal.sol" target="_blank" rel="noopener noreferrer"><code>contracts/employee/EmployeePortal.sol</code></a> in this repository.
                     </p>
@@ -59,15 +59,15 @@
             </div>
 
             <!-- ── Dashboard section ─────────────────────── -->
-            <div id="dashboard-section" style="display:none">
+            <div id="dashboard-section" class="hide">
 
                 <!-- Stats bar -->
-                <div class="card" style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center">
+                <div class="card card-row-lg">
                     <div>
-                        <div style="font-size:.8rem;color:var(--text-muted)">Your wallet</div>
-                        <span id="user-addr-display" class="wallet-address wallet-address-clickable" style="font-family:monospace" title="Click to copy"></span>
+                        <div class="muted-xs">Your wallet</div>
+                        <span id="user-addr-display" class="wallet-address wallet-address-clickable" title="Click to copy"></span>
                     </div>
-                    <div style="margin-left:auto;display:flex;gap:.5rem">
+                    <div class="ml-auto gap-sm d-flex">
                         <button id="refresh-btn" class="btn btn-ghost btn-sm">↺ Refresh</button>
                         <button id="disconnect-btn" class="btn btn-danger btn-sm">Disconnect</button>
                     </div>
@@ -81,8 +81,8 @@
                 <!-- Employers tab -->
                 <div id="tab-employers" class="tab-panel active">
                     <div class="card">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                            <h2 style="margin-bottom:0">Registered Employers</h2>
+                        <div class="space-between-row">
+                            <h2 class="no-mb">Registered Employers</h2>
                             <button id="show-add-employer-btn" type="button" class="btn btn-primary btn-sm">+ Add Employer</button>
                         </div>
                         <div class="table-wrap">
@@ -106,12 +106,12 @@
                     </div>
 
                     <!-- Add employer form (hidden by default) -->
-                    <div id="add-employer-card" class="card mt-2" style="display:none">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                            <h2 style="margin-bottom:0">Register an Employer Contract</h2>
+                    <div id="add-employer-card" class="card mt-2 hide">
+                        <div class="space-between-row">
+                            <h2 class="no-mb">Register an Employer Contract</h2>
                             <button id="hide-add-employer-btn" type="button" class="btn btn-ghost btn-sm">✕ Cancel</button>
                         </div>
-                        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem">
+                        <p class="muted-sm">
                             Ask your employer for their payroll contract address, then add it here
                             to track your contract details and pay history.
                         </p>
@@ -127,8 +127,8 @@
                 </div>
 
                 <!-- Pay history panel (hidden by default) -->
-                <div id="pay-history-panel" class="card mt-2" style="display:none">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <div id="pay-history-panel" class="card mt-2 hide">
+                    <div class="space-between-row">
                         <h2>Pay History — <span id="history-contract-addr" title=""></span></h2>
                         <button id="close-history-btn" class="btn btn-ghost btn-sm">✕ Close</button>
                     </div>

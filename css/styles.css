@@ -130,6 +130,32 @@ footer a:hover {
     gap: 0.5rem;
 }
 
+/* Header row inside a card: title on the left, action button(s) on the right. */
+.card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.card-header-row h2 {
+    margin-bottom: 0;
+}
+
+/* Uppercase section divider label used to group fields within a form (e.g. "Profile" / "Payroll"). */
+.form-section-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 1rem 0 0.5rem;
+}
+
+.form-section-label:first-child {
+    margin-top: 0;
+}
+
 /* ── Buttons ─────────────────────────────────── */
 
 .btn {
@@ -196,6 +222,11 @@ footer a:hover {
 .btn-sm {
     padding: 0.35rem 0.85rem;
     font-size: 0.85rem;
+}
+
+.btn-hero {
+    font-size: 1.1rem;
+    padding: 0.8rem 2rem;
 }
 
 /* ── Forms ───────────────────────────────────── */
@@ -357,6 +388,7 @@ tr:hover td {
     font-weight: 800;
     margin-bottom: 0.75rem;
     background: linear-gradient(135deg, var(--accent), var(--accent-success));
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -511,6 +543,34 @@ tr:hover td {
     display: block;
 }
 
+/* ── Modal ───────────────────────────────────── */
+
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow);
+}
+
+.modal h3 { margin-bottom: 1rem; }
+
+.modal .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1rem; }
+
+.modal.modal-lg { max-width: 720px; }
+
 /* ── Misc ─────────────────────────────────────── */
 
 .truncate {
@@ -533,8 +593,36 @@ tr:hover td {
 .mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
 .mb-1 { margin-bottom: 0.5rem; }
 .mb-2 { margin-bottom: 1rem; }
+.no-underline { text-decoration: none; color: inherit; }
+
+/* small utility: row with space-between alignment used for headers/actions */
+.space-between-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+/* common utilities used to replace inline styles in HTML */
+.hide { display: none; }
+.muted-sm { color: var(--text-muted); font-size: 0.9rem; }
+.muted-xs { color: var(--text-muted); font-size: 0.85rem; }
+.card-row { display:flex; gap:1.5rem; flex-wrap:wrap; align-items:center; }
+.modal-wide { max-width: 540px; }
+.hero-btn-size { font-size:1.1rem; padding: .8rem 2rem; }
+.center-text { text-align:center; }
+.d-flex { display: flex; }
+.text-lg { font-size: 1.4rem; }
+
+/* page / layout utilities */
+.page-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 1.5rem; }
+.card-row-lg { display:flex; gap:2rem; flex-wrap:wrap; align-items:center; }
+.ml-auto { margin-left: auto; }
+.gap-sm { gap: .5rem; }
+.no-mb { margin-bottom: 0; }
 
 .empty-state {
     text-align: center;
