@@ -43,6 +43,39 @@ const EMPLOYER_BYTECODE = "0x6080604052348015600f57600080fd5b5060008054600160016
 let payrollContract = null;
 let contractAddress = null;
 const STORAGE_KEY = "smartwage_employer_contract";
+const META_KEY_PREFIX = "smartwage_employee_meta_";
+
+// ─────────────────────────────────────────────────────────────
+//  Off-chain employee metadata (stored in localStorage)
+// ─────────────────────────────────────────────────────────────
+
+function getMetaStorageKey() {
+    return META_KEY_PREFIX + (contractAddress || "global");
+}
+
+function loadAllMeta() {
+    try {
+        return JSON.parse(localStorage.getItem(getMetaStorageKey()) || "{}");
+    } catch {
+        return {};
+    }
+}
+
+function saveEmployeeMeta(addr, meta) {
+    const all = loadAllMeta();
+    all[addr.toLowerCase()] = { ...all[addr.toLowerCase()], ...meta };
+    localStorage.setItem(getMetaStorageKey(), JSON.stringify(all));
+}
+
+function getEmployeeMeta(addr) {
+    return loadAllMeta()[addr.toLowerCase()] || {};
+}
+
+function deleteEmployeeMeta(addr) {
+    const all = loadAllMeta();
+    delete all[addr.toLowerCase()];
+    localStorage.setItem(getMetaStorageKey(), JSON.stringify(all));
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Contract helpers
@@ -130,15 +163,24 @@ async function renderEmployeeTable(addresses) {
     }
 
     if (activeAddresses.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No active employees. Register one below.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No active employees. Register one below.</td></tr>`;
         return;
     }
 
     for (const addr of activeAddresses) {
         const [, wageWei, payFrequency, lastPaid] = await payrollContract.getEmployee(addr);
         const isDue = await payrollContract.isPaymentDue(addr);
+        const meta = getEmployeeMeta(addr);
+        const displayName = meta.name || "—";
+        const displayRole = [meta.jobTitle, meta.department].filter(Boolean).join(" · ") || "";
+        const employmentBadge = meta.employmentType ? `<span class="badge" style="font-size:.7rem;background:var(--surface-raised);color:var(--text-muted)">${meta.employmentType}</span>` : "";
         const tr = document.createElement("tr");
         tr.innerHTML = `
+            <td>
+                <div style="font-weight:600">${displayName}</div>
+                ${displayRole ? `<div style="font-size:.8rem;color:var(--text-muted)">${displayRole}</div>` : ""}
+                ${employmentBadge}
+            </td>
             <td><span class="truncate" title="${addr}">${addr}</span></td>
             <td>${formatWei(wageWei)}</td>
             <td>${formatFrequency(payFrequency)}</td>
@@ -289,6 +331,17 @@ async function handleRegisterEmployee(e) {
             BigInt(freqSeconds)
         );
         await tx.wait();
+
+        // Save off-chain metadata to localStorage
+        saveEmployeeMeta(addr, {
+            name: document.getElementById("reg-name").value.trim(),
+            department: document.getElementById("reg-department").value.trim(),
+            jobTitle: document.getElementById("reg-job-title").value.trim(),
+            jobDescription: document.getElementById("reg-job-description").value.trim(),
+            employmentType: document.getElementById("reg-employment-type").value,
+            startDate: document.getElementById("reg-start-date").value,
+        });
+
         showToast("Employee registered successfully!", "success");
         hideRegisterForm();
         await refreshDashboard();
@@ -328,6 +381,7 @@ async function handleRemoveEmployee(addr) {
         showToast("Removing employee…", "info");
         const tx = await payrollContract.removeEmployee(addr);
         await tx.wait();
+        deleteEmployeeMeta(addr);
         showToast("Employee removed.", "success");
         await refreshDashboard();
     } catch (err) {
@@ -370,6 +424,16 @@ function openEditModal(addr, wageWei, payFrequency) {
     document.getElementById("edit-addr-display").textContent = shortAddress(addr);
     document.getElementById("edit-wage").value = ethers.formatEther(wageWei);
     document.getElementById("edit-freq").value = payFrequency.toString();
+
+    // Pre-populate off-chain metadata fields
+    const meta = getEmployeeMeta(addr);
+    document.getElementById("edit-name").value = meta.name || "";
+    document.getElementById("edit-department").value = meta.department || "";
+    document.getElementById("edit-job-title").value = meta.jobTitle || "";
+    document.getElementById("edit-job-description").value = meta.jobDescription || "";
+    document.getElementById("edit-employment-type").value = meta.employmentType || "Full-time";
+    document.getElementById("edit-start-date").value = meta.startDate || "";
+
     document.getElementById("edit-modal").style.display = "flex";
 }
 
@@ -391,6 +455,17 @@ async function handleUpdateEmployee(e) {
             BigInt(freqSeconds)
         );
         await tx.wait();
+
+        // Save updated off-chain metadata
+        saveEmployeeMeta(editTarget, {
+            name: document.getElementById("edit-name").value.trim(),
+            department: document.getElementById("edit-department").value.trim(),
+            jobTitle: document.getElementById("edit-job-title").value.trim(),
+            jobDescription: document.getElementById("edit-job-description").value.trim(),
+            employmentType: document.getElementById("edit-employment-type").value,
+            startDate: document.getElementById("edit-start-date").value,
+        });
+
         showToast("Employee updated!", "success");
         closeEditModal();
         await refreshDashboard();

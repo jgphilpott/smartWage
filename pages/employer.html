@@ -119,6 +119,7 @@
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>Name / Role</th>
                                         <th>Address</th>
                                         <th>Wage / Cycle</th>
                                         <th>Frequency</th>
@@ -128,7 +129,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="employee-tbody">
-                                    <tr><td colspan="6" class="empty-state">Loading…</td></tr>
+                                    <tr><td colspan="7" class="empty-state">Loading…</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -144,6 +145,39 @@
                             <div class="form-group">
                                 <label for="reg-addr">Employee wallet address</label>
                                 <input type="text" id="reg-addr" placeholder="0x…" required />
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reg-name">Full name</label>
+                                    <input type="text" id="reg-name" placeholder="Jane Smith" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg-employment-type">Employment type</label>
+                                    <select id="reg-employment-type">
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Intern">Intern</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reg-department">Department</label>
+                                    <input type="text" id="reg-department" placeholder="Engineering" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg-job-title">Job title</label>
+                                    <input type="text" id="reg-job-title" placeholder="Software Engineer" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-job-description">Job description</label>
+                                <textarea id="reg-job-description" rows="3" placeholder="Brief summary of responsibilities…" style="resize:vertical"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-start-date">Start date</label>
+                                <input type="date" id="reg-start-date" />
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -222,9 +256,44 @@
 
         <!-- Edit employee modal -->
         <div id="edit-modal" class="modal-backdrop">
-            <div class="modal">
+            <div class="modal" style="max-width:540px">
                 <h3>Edit Employee — <span id="edit-addr-display"></span></h3>
                 <form id="edit-form">
+                    <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Profile</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-name">Full name</label>
+                            <input type="text" id="edit-name" placeholder="Jane Smith" />
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-employment-type">Employment type</label>
+                            <select id="edit-employment-type">
+                                <option value="Full-time">Full-time</option>
+                                <option value="Part-time">Part-time</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Intern">Intern</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-department">Department</label>
+                            <input type="text" id="edit-department" placeholder="Engineering" />
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-job-title">Job title</label>
+                            <input type="text" id="edit-job-title" placeholder="Software Engineer" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-job-description">Job description</label>
+                        <textarea id="edit-job-description" rows="3" placeholder="Brief summary of responsibilities…" style="resize:vertical"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-start-date">Start date</label>
+                        <input type="date" id="edit-start-date" />
+                    </div>
+                    <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:1rem 0 .5rem">Payroll</div>
                     <div class="form-group">
                         <label for="edit-wage">New wage per cycle (ETH)</label>
                         <input type="number" id="edit-wage" min="0" step="0.000001" required />

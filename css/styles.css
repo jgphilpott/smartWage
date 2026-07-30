@@ -225,6 +225,8 @@ footer a:hover {
 
 input[type="text"],
 input[type="number"],
+input[type="date"],
+textarea,
 select {
     background: var(--surface-raised);
     border: 1px solid var(--border);
@@ -238,11 +240,13 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
     border-color: var(--accent);
 }
 
-input::placeholder {
+input::placeholder,
+textarea::placeholder {
     color: var(--text-muted);
 }
 
