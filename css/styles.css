@@ -234,9 +234,19 @@ select {
     color: var(--text);
     padding: 0.55rem 0.85rem;
     font-size: 0.95rem;
+    font-family: inherit;
+    line-height: inherit;
     width: 100%;
     outline: none;
     transition: border-color 0.15s;
+}
+
+input[type="date"] {
+    color-scheme: dark;
+}
+
+textarea {
+    resize: vertical;
 }
 
 input:focus,

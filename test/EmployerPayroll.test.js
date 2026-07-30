@@ -365,4 +365,93 @@ describe("EmployerPayroll", function () {
             expect(await payroll.getEmployeeCount()).to.equal(2);
         });
     });
+
+    // ──────────────────────────────────────────
+    //  setEmployeeMeta / getEmployeeMeta
+    // ──────────────────────────────────────────
+
+    describe("setEmployeeMeta() / getEmployeeMeta()", function () {
+        beforeEach(async function () {
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+        });
+
+        it("stores and retrieves all metadata fields", async function () {
+            await payroll.setEmployeeMeta(
+                employee1.address,
+                "Jane Smith",
+                "Engineering",
+                "Software Engineer",
+                "Builds cool things",
+                "Full-time",
+                "2025-01-15"
+            );
+
+            const [name, department, jobTitle, jobDescription, employmentType, startDate] =
+                await payroll.getEmployeeMeta(employee1.address);
+
+            expect(name).to.equal("Jane Smith");
+            expect(department).to.equal("Engineering");
+            expect(jobTitle).to.equal("Software Engineer");
+            expect(jobDescription).to.equal("Builds cool things");
+            expect(employmentType).to.equal("Full-time");
+            expect(startDate).to.equal("2025-01-15");
+        });
+
+        it("emits EmployeeMetaUpdated", async function () {
+            await expect(
+                payroll.setEmployeeMeta(
+                    employee1.address,
+                    "Jane Smith", "Engineering", "Engineer", "", "Full-time", "2025-01-15"
+                )
+            )
+                .to.emit(payroll, "EmployeeMetaUpdated")
+                .withArgs(employee1.address);
+        });
+
+        it("overwrites existing metadata on subsequent calls", async function () {
+            await payroll.setEmployeeMeta(
+                employee1.address, "Old Name", "OldDept", "Old Title", "", "Part-time", "2024-01-01"
+            );
+            await payroll.setEmployeeMeta(
+                employee1.address, "New Name", "NewDept", "New Title", "", "Contract", "2025-06-01"
+            );
+
+            const [name, department, jobTitle, , employmentType, startDate] =
+                await payroll.getEmployeeMeta(employee1.address);
+
+            expect(name).to.equal("New Name");
+            expect(department).to.equal("NewDept");
+            expect(jobTitle).to.equal("New Title");
+            expect(employmentType).to.equal("Contract");
+            expect(startDate).to.equal("2025-06-01");
+        });
+
+        it("returns empty strings for an employee with no metadata set", async function () {
+            const [name, department, jobTitle, jobDescription, employmentType, startDate] =
+                await payroll.getEmployeeMeta(employee1.address);
+
+            expect(name).to.equal("");
+            expect(department).to.equal("");
+            expect(jobTitle).to.equal("");
+            expect(jobDescription).to.equal("");
+            expect(employmentType).to.equal("");
+            expect(startDate).to.equal("");
+        });
+
+        it("reverts if caller is not employer", async function () {
+            await expect(
+                payroll.connect(other).setEmployeeMeta(
+                    employee1.address, "Jane", "Eng", "Dev", "", "Full-time", "2025-01-01"
+                )
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("reverts if employee is not active", async function () {
+            await expect(
+                payroll.setEmployeeMeta(
+                    employee2.address, "Jane", "Eng", "Dev", "", "Full-time", "2025-01-01"
+                )
+            ).to.be.revertedWith("EmployerPayroll: employee not found");
+        });
+    });
 });

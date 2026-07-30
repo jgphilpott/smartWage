@@ -31,6 +31,19 @@
         "internalType": "address",
         "name": "employee",
         "type": "address"
+      }
+    ],
+    "name": "EmployeeMetaUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "employee",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -236,6 +249,50 @@
         "type": "address"
       }
     ],
+    "name": "getEmployeeMeta",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      }
+    ],
     "name": "isPaymentDue",
     "outputs": [
       {
@@ -328,6 +385,49 @@
       }
     ],
     "name": "sendBonus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "department",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "jobTitle",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "jobDescription",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "employmentType",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "startDate",
+        "type": "string"
+      }
+    ],
+    "name": "setEmployeeMeta",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
