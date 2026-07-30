@@ -218,6 +218,7 @@ contract EmployerPayroll {
     function removeEmployee(address addr) external onlyEmployer {
         require(_employees[addr].active, "EmployerPayroll: employee not found");
         _employees[addr].active = false;
+        delete _employeeMeta[addr];
         emit EmployeeRemoved(addr);
     }
 
