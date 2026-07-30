@@ -66,7 +66,7 @@ describe("EmployerPayroll", function () {
     describe("registerEmployee()", function () {
         it("registers a new employee and emits event", async function () {
             await expect(
-                payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK)
+                payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "")
             )
                 .to.emit(payroll, "EmployeeRegistered")
                 .withArgs(employee1.address, WAGE, ONE_WEEK);
@@ -82,32 +82,32 @@ describe("EmployerPayroll", function () {
 
         it("reverts if caller is not employer", async function () {
             await expect(
-                payroll.connect(other).registerEmployee(employee1.address, WAGE, ONE_WEEK)
+                payroll.connect(other).registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "")
             ).to.be.revertedWith("EmployerPayroll: caller is not employer");
         });
 
         it("reverts if employee already registered", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
             await expect(
-                payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK)
+                payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "")
             ).to.be.revertedWith("EmployerPayroll: employee already registered");
         });
 
         it("reverts on zero address", async function () {
             await expect(
-                payroll.registerEmployee(ethers.ZeroAddress, WAGE, ONE_WEEK)
+                payroll.registerEmployee(ethers.ZeroAddress, WAGE, ONE_WEEK, "", "", "", "", "", "")
             ).to.be.revertedWith("EmployerPayroll: zero address");
         });
 
         it("reverts when wage is zero", async function () {
             await expect(
-                payroll.registerEmployee(employee1.address, 0, ONE_WEEK)
+                payroll.registerEmployee(employee1.address, 0, ONE_WEEK, "", "", "", "", "", "")
             ).to.be.revertedWith("EmployerPayroll: wage must be > 0");
         });
 
         it("reverts when payFrequency is zero", async function () {
             await expect(
-                payroll.registerEmployee(employee1.address, WAGE, 0)
+                payroll.registerEmployee(employee1.address, WAGE, 0, "", "", "", "", "", "")
             ).to.be.revertedWith("EmployerPayroll: pay frequency must be > 0");
         });
     });
@@ -118,14 +118,14 @@ describe("EmployerPayroll", function () {
 
     describe("updateEmployee()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
         });
 
         it("updates wage and frequency", async function () {
             const newWage = ethers.parseEther("0.02");
             const newFreq = ONE_WEEK * 2;
 
-            await expect(payroll.updateEmployee(employee1.address, newWage, newFreq))
+            await expect(payroll.updateEmployee(employee1.address, newWage, newFreq, "", "", "", "", "", ""))
                 .to.emit(payroll, "EmployeeUpdated")
                 .withArgs(employee1.address, newWage, newFreq);
 
@@ -136,13 +136,13 @@ describe("EmployerPayroll", function () {
 
         it("reverts if caller is not employer", async function () {
             await expect(
-                payroll.connect(other).updateEmployee(employee1.address, WAGE, ONE_WEEK)
+                payroll.connect(other).updateEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "")
             ).to.be.revertedWith("EmployerPayroll: caller is not employer");
         });
 
         it("reverts if employee not found", async function () {
             await expect(
-                payroll.updateEmployee(employee2.address, WAGE, ONE_WEEK)
+                payroll.updateEmployee(employee2.address, WAGE, ONE_WEEK, "", "", "", "", "", "")
             ).to.be.revertedWith("EmployerPayroll: employee not found");
         });
     });
@@ -153,7 +153,7 @@ describe("EmployerPayroll", function () {
 
     describe("removeEmployee()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
         });
 
         it("deactivates the employee", async function () {
@@ -184,7 +184,7 @@ describe("EmployerPayroll", function () {
 
     describe("payEmployee()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
         });
 
         it("transfers wage and emits PaymentSent", async function () {
@@ -198,7 +198,7 @@ describe("EmployerPayroll", function () {
             // Drain the contract first
             const balance = await payroll.getBalance();
             const bigWage = balance + WAGE;
-            await payroll.registerEmployee(employee2.address, bigWage, ONE_WEEK);
+            await payroll.registerEmployee(employee2.address, bigWage, ONE_WEEK, "", "", "", "", "", "");
             await expect(
                 payroll.payEmployee(employee2.address)
             ).to.be.revertedWith("EmployerPayroll: insufficient balance");
@@ -217,8 +217,8 @@ describe("EmployerPayroll", function () {
 
     describe("processDuePayments()", function () {
         it("pays all employees whose frequency has elapsed", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
-            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK * 2);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK * 2, "", "", "", "", "", "");
 
             // Advance 1 week — employee1 is due, employee2 is not
             await time.increase(ONE_WEEK + 1);
@@ -236,7 +236,7 @@ describe("EmployerPayroll", function () {
         });
 
         it("can be called by anyone, not just employer", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
             await time.increase(ONE_WEEK + 1);
             await expect(
                 payroll.connect(other).processDuePayments(0, 100)
@@ -244,7 +244,7 @@ describe("EmployerPayroll", function () {
         });
 
         it("skips employees that are not yet due", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK * 4);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK * 4, "", "", "", "", "", "");
             await time.increase(ONE_WEEK);
 
             const before = await ethers.provider.getBalance(employee1.address);
@@ -255,8 +255,8 @@ describe("EmployerPayroll", function () {
         });
 
         it("only processes employees within the given range", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
-            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
 
             await time.increase(ONE_WEEK + 1);
 
@@ -274,7 +274,7 @@ describe("EmployerPayroll", function () {
         });
 
         it("clamps end index to list length when count exceeds bounds", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
             await time.increase(ONE_WEEK + 1);
 
             const before = await ethers.provider.getBalance(employee1.address);
@@ -292,7 +292,7 @@ describe("EmployerPayroll", function () {
 
     describe("sendBonus()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
         });
 
         it("transfers the bonus and emits BonusSent", async function () {
@@ -332,18 +332,18 @@ describe("EmployerPayroll", function () {
 
     describe("isPaymentDue()", function () {
         it("returns true when frequency elapsed", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
             await time.increase(ONE_WEEK + 1);
             expect(await payroll.isPaymentDue(employee1.address)).to.be.true;
         });
 
         it("returns false when not yet due", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
             expect(await payroll.isPaymentDue(employee1.address)).to.be.false;
         });
 
         it("returns false for removed employee", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
             await payroll.removeEmployee(employee1.address);
             await time.increase(ONE_WEEK + 1);
             expect(await payroll.isPaymentDue(employee1.address)).to.be.false;
@@ -356,13 +356,102 @@ describe("EmployerPayroll", function () {
 
     describe("getEmployeeList() / getEmployeeCount()", function () {
         it("returns all registered employee addresses", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK);
-            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK);
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
 
             const list = await payroll.getEmployeeList();
             expect(list).to.include(employee1.address);
             expect(list).to.include(employee2.address);
             expect(await payroll.getEmployeeCount()).to.equal(2);
+        });
+    });
+
+    // ──────────────────────────────────────────
+    //  setEmployeeMeta / getEmployeeMeta
+    // ──────────────────────────────────────────
+
+    describe("setEmployeeMeta() / getEmployeeMeta()", function () {
+        beforeEach(async function () {
+            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+        });
+
+        it("stores and retrieves all metadata fields", async function () {
+            await payroll.setEmployeeMeta(
+                employee1.address,
+                "Jane Smith",
+                "Engineering",
+                "Software Engineer",
+                "Builds cool things",
+                "Full-time",
+                "2025-01-15"
+            );
+
+            const [name, department, jobTitle, jobDescription, employmentType, startDate] =
+                await payroll.getEmployeeMeta(employee1.address);
+
+            expect(name).to.equal("Jane Smith");
+            expect(department).to.equal("Engineering");
+            expect(jobTitle).to.equal("Software Engineer");
+            expect(jobDescription).to.equal("Builds cool things");
+            expect(employmentType).to.equal("Full-time");
+            expect(startDate).to.equal("2025-01-15");
+        });
+
+        it("emits EmployeeMetaUpdated", async function () {
+            await expect(
+                payroll.setEmployeeMeta(
+                    employee1.address,
+                    "Jane Smith", "Engineering", "Engineer", "", "Full-time", "2025-01-15"
+                )
+            )
+                .to.emit(payroll, "EmployeeMetaUpdated")
+                .withArgs(employee1.address);
+        });
+
+        it("overwrites existing metadata on subsequent calls", async function () {
+            await payroll.setEmployeeMeta(
+                employee1.address, "Old Name", "OldDept", "Old Title", "", "Part-time", "2024-01-01"
+            );
+            await payroll.setEmployeeMeta(
+                employee1.address, "New Name", "NewDept", "New Title", "", "Contract", "2025-06-01"
+            );
+
+            const [name, department, jobTitle, , employmentType, startDate] =
+                await payroll.getEmployeeMeta(employee1.address);
+
+            expect(name).to.equal("New Name");
+            expect(department).to.equal("NewDept");
+            expect(jobTitle).to.equal("New Title");
+            expect(employmentType).to.equal("Contract");
+            expect(startDate).to.equal("2025-06-01");
+        });
+
+        it("returns empty strings for an employee with no metadata set", async function () {
+            const [name, department, jobTitle, jobDescription, employmentType, startDate] =
+                await payroll.getEmployeeMeta(employee1.address);
+
+            expect(name).to.equal("");
+            expect(department).to.equal("");
+            expect(jobTitle).to.equal("");
+            expect(jobDescription).to.equal("");
+            expect(employmentType).to.equal("");
+            expect(startDate).to.equal("");
+        });
+
+        it("reverts if caller is not employer", async function () {
+            await expect(
+                payroll.connect(other).setEmployeeMeta(
+                    employee1.address, "Jane", "Eng", "Dev", "", "Full-time", "2025-01-01"
+                )
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("reverts if employee is not active", async function () {
+            await expect(
+                payroll.setEmployeeMeta(
+                    employee2.address, "Jane", "Eng", "Dev", "", "Full-time", "2025-01-01"
+                )
+            ).to.be.revertedWith("EmployerPayroll: employee not found");
         });
     });
 });

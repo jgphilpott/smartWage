@@ -6,27 +6,7 @@
         <title>smartWage — Employer Dashboard</title>
         <link rel="icon" type="image/png" href="../imgs/contract.png" />
         <link rel="stylesheet" href="../css/styles.css" />
-        <style>
-            .modal-backdrop {
-                display: none;
-                position: fixed; inset: 0;
-                background: rgba(0,0,0,.6);
-                z-index: 50;
-                align-items: center;
-                justify-content: center;
-            }
-            .modal {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                padding: 2rem;
-                width: 100%;
-                max-width: 480px;
-                box-shadow: var(--shadow);
-            }
-            .modal h3 { margin-bottom: 1rem; }
-            .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1rem; }
-        </style>
+    <!-- modal styles moved to css/styles.css -->
     </head>
     <body>
 
@@ -37,13 +17,13 @@
                     <span class="dot"></span>
                     <span class="status-text">Not connected</span>
                 </div>
-                <span id="wallet-address" class="wallet-address" style="display:none"></span>
+                <span id="wallet-address" class="wallet-address hide"></span>
                 <button id="connect-btn" class="btn btn-primary">Connect Wallet</button>
             </div>
         </header>
 
         <main class="wide">
-            <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:1.5rem">🏢 Employer Dashboard</h1>
+            <h1 class="page-title">🏢 Employer Dashboard</h1>
 
             <!-- ── Setup section ──────────────────────────── -->
             <div id="setup-section">
@@ -67,7 +47,7 @@
 
                 <div class="card mt-2">
                     <h2>Deploy a New Payroll Contract</h2>
-                    <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem">
+                    <p class="muted-sm">
                         Don't have a contract yet? Deploy a fresh
                         <code>EmployerPayroll</code> contract directly from your connected wallet —
                         you'll be the owner/employer and can start registering employees right away.
@@ -75,7 +55,7 @@
                     <div class="flex-row">
                         <button id="deploy-new-btn" type="button" class="btn btn-success">🚀 Deploy New Payroll Contract</button>
                     </div>
-                    <p style="color:var(--text-muted);font-size:.85rem;margin-top:1rem">
+                    <p class="muted-xs mt-2">
                         The contract source is at
                         <a href="https://github.com/jgphilpott/smartWage/blob/main/contracts/employer/EmployerPayroll.sol" target="_blank" rel="noopener noreferrer"><code>contracts/employer/EmployerPayroll.sol</code></a> in this repository.
                     </p>
@@ -83,19 +63,19 @@
             </div>
 
             <!-- ── Dashboard section ─────────────────────── -->
-            <div id="dashboard-section" style="display:none">
+            <div id="dashboard-section" class="hide">
 
                 <!-- Stats bar -->
-                <div class="card" style="display:flex;gap:2rem;flex-wrap:wrap;align-items:center">
+                <div class="card card-row-lg">
                     <div>
-                        <div style="font-size:.8rem;color:var(--text-muted)">Contract</div>
-                        <span id="contract-address-display" class="wallet-address wallet-address-clickable" style="font-family:monospace" title="Click to copy"></span>
+                        <div class="muted-xs">Contract</div>
+                        <span id="contract-address-display" class="wallet-address wallet-address-clickable" title="Click to copy"></span>
                     </div>
                     <div>
-                        <div style="font-size:.8rem;color:var(--text-muted)">Balance</div>
+                        <div class="muted-xs">Balance</div>
                         <strong id="contract-balance">—</strong>
                     </div>
-                    <div style="margin-left:auto;display:flex;gap:.5rem">
+                    <div class="ml-auto gap-sm d-flex">
                         <button id="refresh-btn" class="btn btn-ghost btn-sm">↺ Refresh</button>
                         <button id="process-due-btn" class="btn btn-success btn-sm">⚡ Run Due Payments</button>
                         <button id="disconnect-btn" class="btn btn-danger btn-sm">Disconnect</button>
@@ -111,14 +91,15 @@
                 <!-- Employees tab -->
                 <div id="tab-employees" class="tab-panel active">
                     <div class="card">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                            <h2 style="margin-bottom:0">Active Employees</h2>
+                        <div class="space-between-row">
+                            <h2 class="no-mb">Active Employees</h2>
                             <button id="show-register-btn" type="button" class="btn btn-primary btn-sm">+ Register Employee</button>
                         </div>
                         <div class="table-wrap">
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>Name / Role</th>
                                         <th>Address</th>
                                         <th>Wage / Cycle</th>
                                         <th>Frequency</th>
@@ -128,22 +109,55 @@
                                     </tr>
                                 </thead>
                                 <tbody id="employee-tbody">
-                                    <tr><td colspan="6" class="empty-state">Loading…</td></tr>
+                                    <tr><td colspan="7" class="empty-state">Loading…</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- Register new employee form (hidden by default) -->
-                    <div id="register-card" class="card mt-2" style="display:none">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                            <h2 style="margin-bottom:0">Register New Employee</h2>
+                    <div id="register-card" class="card mt-2 hide">
+                        <div class="space-between-row">
+                            <h2 class="no-mb">Register New Employee</h2>
                             <button id="hide-register-btn" type="button" class="btn btn-ghost btn-sm">✕ Cancel</button>
                         </div>
                         <form id="register-form">
                             <div class="form-group">
                                 <label for="reg-addr">Employee wallet address</label>
                                 <input type="text" id="reg-addr" placeholder="0x…" required />
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reg-name">Full name</label>
+                                    <input type="text" id="reg-name" placeholder="Jane Smith" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg-employment-type">Employment type</label>
+                                    <select id="reg-employment-type">
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Intern">Intern</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reg-department">Department</label>
+                                    <input type="text" id="reg-department" placeholder="Engineering" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg-job-title">Job title</label>
+                                    <input type="text" id="reg-job-title" placeholder="Software Engineer" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-job-description">Job description</label>
+                                <textarea id="reg-job-description" rows="3" placeholder="Brief summary of responsibilities…"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-start-date">Start date</label>
+                                <input type="date" id="reg-start-date" />
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -171,14 +185,14 @@
                 <!-- Deposit tab -->
                 <div id="tab-deposit" class="tab-panel">
                     <div class="card">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                            <h2 style="margin-bottom:0">Funds Activity</h2>
-                            <div class="flex-row" style="gap:.5rem">
+                        <div class="space-between-row">
+                            <h2 class="no-mb">Funds Activity</h2>
+                            <div class="flex-row gap-sm">
                                 <button id="show-deposit-btn" type="button" class="btn btn-primary btn-sm">+ Deposit Funds</button>
                                 <button id="refresh-funds-history-btn" type="button" class="btn btn-ghost btn-sm">↺ Refresh</button>
                             </div>
                         </div>
-                        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1rem">
+                        <p class="muted-xs mb-2">
                             On-chain record of every deposit into, and payment/bonus out of, this contract.
                         </p>
                         <div class="table-wrap">
@@ -199,12 +213,12 @@
                     </div>
 
                     <!-- Deposit funds form (hidden by default) -->
-                    <div id="deposit-card" class="card mt-2" style="display:none">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                            <h2 style="margin-bottom:0">Deposit Funds</h2>
+                    <div id="deposit-card" class="card mt-2 hide">
+                        <div class="space-between-row">
+                            <h2 class="no-mb">Deposit Funds</h2>
                             <button id="hide-deposit-btn" type="button" class="btn btn-ghost btn-sm">✕ Cancel</button>
                         </div>
-                        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem">
+                        <p class="muted-sm">
                             Add ETH to your payroll contract to fund employee payments.
                         </p>
                         <form id="deposit-form">
@@ -222,9 +236,44 @@
 
         <!-- Edit employee modal -->
         <div id="edit-modal" class="modal-backdrop">
-            <div class="modal">
+            <div class="modal modal-wide">
                 <h3>Edit Employee — <span id="edit-addr-display"></span></h3>
                 <form id="edit-form">
+                    <div class="form-section-label">Profile</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-name">Full name</label>
+                            <input type="text" id="edit-name" placeholder="Jane Smith" />
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-employment-type">Employment type</label>
+                            <select id="edit-employment-type">
+                                <option value="Full-time">Full-time</option>
+                                <option value="Part-time">Part-time</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Intern">Intern</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-department">Department</label>
+                            <input type="text" id="edit-department" placeholder="Engineering" />
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-job-title">Job title</label>
+                            <input type="text" id="edit-job-title" placeholder="Software Engineer" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-job-description">Job description</label>
+                        <textarea id="edit-job-description" rows="3" placeholder="Brief summary of responsibilities…"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-start-date">Start date</label>
+                        <input type="date" id="edit-start-date" />
+                    </div>
+                    <div class="form-section-label">Payroll</div>
                     <div class="form-group">
                         <label for="edit-wage">New wage per cycle (ETH)</label>
                         <input type="number" id="edit-wage" min="0" step="0.000001" required />
