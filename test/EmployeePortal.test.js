@@ -23,7 +23,7 @@ describe("EmployeePortal", function () {
         });
 
         // Register the employee in the payroll contract
-        await payroll.connect(employer).registerEmployee(employee.address, WAGE, ONE_WEEK);
+        await payroll.connect(employer).registerEmployee(employee.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
 
         // Deploy the employee's portal contract
         const EmployeePortal = await ethers.getContractFactory("EmployeePortal");

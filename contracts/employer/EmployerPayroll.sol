@@ -86,15 +86,27 @@ contract EmployerPayroll {
     // ─────────────────────────────────────────────
 
     /**
-     * @notice Register a new employee.
-     * @param addr         Employee wallet address.
-     * @param wageWei      Amount (in wei) to pay each cycle.
-     * @param payFrequency Seconds between pay cycles.
+     * @notice Register a new employee along with their profile metadata.
+     * @param addr             Employee wallet address.
+     * @param wageWei          Amount (in wei) to pay each cycle.
+     * @param payFrequency     Seconds between pay cycles.
+     * @param name             Full name.
+     * @param department       Department name.
+     * @param jobTitle         Job title.
+     * @param jobDescription   Brief description of responsibilities.
+     * @param employmentType   One of: Full-time, Part-time, Contract, Intern.
+     * @param startDate        ISO-8601 date string (e.g. "2025-01-15").
      */
     function registerEmployee(
         address addr,
         uint256 wageWei,
-        uint256 payFrequency
+        uint256 payFrequency,
+        string calldata name,
+        string calldata department,
+        string calldata jobTitle,
+        string calldata jobDescription,
+        string calldata employmentType,
+        string calldata startDate
     ) external onlyEmployer {
         require(addr != address(0), "EmployerPayroll: zero address");
         require(wageWei > 0, "EmployerPayroll: wage must be > 0");
@@ -110,19 +122,41 @@ contract EmployerPayroll {
         });
         _employeeList.push(addr);
 
+        _employeeMeta[addr] = EmployeeMeta({
+            name: name,
+            department: department,
+            jobTitle: jobTitle,
+            jobDescription: jobDescription,
+            employmentType: employmentType,
+            startDate: startDate
+        });
+
         emit EmployeeRegistered(addr, wageWei, payFrequency);
+        emit EmployeeMetaUpdated(addr);
     }
 
     /**
-     * @notice Update an existing employee's wage and/or pay frequency.
-     * @param addr         Employee wallet address.
-     * @param wageWei      New wage amount in wei.
-     * @param payFrequency New seconds between pay cycles.
+     * @notice Update an existing employee's wage, pay frequency, and profile metadata.
+     * @param addr             Employee wallet address.
+     * @param wageWei          New wage amount in wei.
+     * @param payFrequency     New seconds between pay cycles.
+     * @param name             Full name.
+     * @param department       Department name.
+     * @param jobTitle         Job title.
+     * @param jobDescription   Brief description of responsibilities.
+     * @param employmentType   One of: Full-time, Part-time, Contract, Intern.
+     * @param startDate        ISO-8601 date string (e.g. "2025-01-15").
      */
     function updateEmployee(
         address addr,
         uint256 wageWei,
-        uint256 payFrequency
+        uint256 payFrequency,
+        string calldata name,
+        string calldata department,
+        string calldata jobTitle,
+        string calldata jobDescription,
+        string calldata employmentType,
+        string calldata startDate
     ) external onlyEmployer {
         require(_employees[addr].active, "EmployerPayroll: employee not found");
         require(wageWei > 0, "EmployerPayroll: wage must be > 0");
@@ -131,7 +165,17 @@ contract EmployerPayroll {
         _employees[addr].wageWei = wageWei;
         _employees[addr].payFrequency = payFrequency;
 
+        _employeeMeta[addr] = EmployeeMeta({
+            name: name,
+            department: department,
+            jobTitle: jobTitle,
+            jobDescription: jobDescription,
+            employmentType: employmentType,
+            startDate: startDate
+        });
+
         emit EmployeeUpdated(addr, wageWei, payFrequency);
+        emit EmployeeMetaUpdated(addr);
     }
 
     /**

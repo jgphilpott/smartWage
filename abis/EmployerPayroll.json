@@ -351,6 +351,36 @@
         "internalType": "uint256",
         "name": "payFrequency",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "department",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "jobTitle",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "jobDescription",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "employmentType",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "startDate",
+        "type": "string"
       }
     ],
     "name": "registerEmployee",
@@ -448,6 +478,36 @@
         "internalType": "uint256",
         "name": "payFrequency",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "department",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "jobTitle",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "jobDescription",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "employmentType",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "startDate",
+        "type": "string"
       }
     ],
     "name": "updateEmployee",
