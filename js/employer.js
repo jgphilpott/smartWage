@@ -290,10 +290,12 @@ async function connectToContract(address) {
 
 function showRegisterForm() {
     document.getElementById("register-card").style.display = "block";
+    document.getElementById("employee-card").style.display = "none";
 }
 
 function hideRegisterForm() {
     document.getElementById("register-card").style.display = "none";
+    document.getElementById("employee-card").style.display = "";
     document.getElementById("register-form").reset();
 }
 
@@ -370,10 +372,12 @@ async function handleRemoveEmployee(addr) {
 
 function showDepositForm() {
     document.getElementById("deposit-card").style.display = "block";
+    document.getElementById("funds-history-card").style.display = "none";
 }
 
 function hideDepositForm() {
     document.getElementById("deposit-card").style.display = "none";
+    document.getElementById("funds-history-card").style.display = "";
     document.getElementById("deposit-form").reset();
 }
 

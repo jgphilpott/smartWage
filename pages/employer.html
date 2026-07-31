@@ -90,7 +90,7 @@
 
                 <!-- Employees tab -->
                 <div id="tab-employees" class="tab-panel active">
-                    <div class="card">
+                    <div id="employee-card" class="card">
                         <div class="space-between-row">
                             <h2 class="no-mb">Active Employees</h2>
                             <button id="show-register-btn" type="button" class="btn btn-primary btn-sm">+ Register Employee</button>
@@ -124,7 +124,7 @@
                         <form id="register-form">
                             <div class="form-group">
                                 <label for="reg-addr">Employee wallet address</label>
-                                <input type="text" id="reg-addr" placeholder="0x…" required />
+                                <input type="text" id="reg-addr" placeholder="0x…" required autocomplete="off" />
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -184,7 +184,7 @@
 
                 <!-- Deposit tab -->
                 <div id="tab-deposit" class="tab-panel">
-                    <div class="card">
+                    <div id="funds-history-card" class="card">
                         <div class="space-between-row">
                             <h2 class="no-mb">Funds Activity</h2>
                             <div class="flex-row gap-sm">
