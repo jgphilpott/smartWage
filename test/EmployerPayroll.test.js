@@ -212,7 +212,10 @@ describe("EmployerPayroll", function () {
         });
 
         it("prevents later activation after removal", async function () {
-            const portal = await registerEmployee(employee1);
+            const portal = await ethers.getContractAt(
+                "EmployeePortal",
+                await payroll.getEmployeePortal(employee1.address)
+            );
             await payroll.removeEmployee(employee1.address);
 
             await expect(

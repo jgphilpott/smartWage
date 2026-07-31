@@ -4,7 +4,7 @@
 
 # smartWage
 
-A simple and free dApp that uses Ethereum smart contracts to automate the payroll process. Employers deploy an on-chain contract to schedule ETH payments to employees; employees track their contracts and pay history through their own portal contract.
+A simple and free dApp that uses Ethereum smart contracts to automate the payroll process. Employers deploy an on-chain payroll contract, register employees, and automatically create a linked employee contract for each hire. Employees connect with the contract address their employer provides, review the agreement, and sign to activate it.
 
 ---
 
@@ -29,8 +29,8 @@ smartWage has two roles and two matching smart contracts:
 
 | Role | Contract | Purpose |
 |---|---|---|
-| **Employer** | `EmployerPayroll` | Holds ETH, registers employees, schedules payments, sends bonuses |
-| **Employee** | `EmployeePortal` | Aggregates employer relationships, reads contract details cross-chain |
+| **Employer** | `EmployerPayroll` | Holds ETH, registers employees, creates linked employee contracts, schedules payments, sends bonuses |
+| **Employee** | `EmployeePortal` | A single employment agreement linked to one employer and one employee; employees use it to review and sign |
 
 The frontend is a static site (no build step) that can be hosted on GitHub Pages or served locally via any HTTP server. It uses [ethers.js v6](https://docs.ethers.org/v6/) and requires a [MetaMask](https://metamask.io/) wallet.
 
@@ -90,12 +90,13 @@ Go to the **Register Employee** tab:
 | Wage per cycle (ETH) | Amount paid each pay period |
 | Pay frequency | How often payments are made (minute → monthly) |
 
-Click **Register Employee**. The first payment becomes due after one full pay cycle.
+Click **Register Employee**. smartWage will automatically deploy a linked `EmployeePortal` contract for that employee. Share that contract address with the employee so they can connect and sign it. The first payment becomes due one full pay cycle after the employee signs.
 
 #### Managing employees
 
-The **Employees** tab lists all registered employees. For each employee you can:
+The **Employees** tab lists all current employees. For each employee you can:
 
+- **Copy Contract** — copy the linked employee contract to share with the employee.
 - **Pay** — immediately send one cycle's wage (employer only).
 - **Bonus** — send a one-off bonus of any amount.
 - **Edit** — update wage and/or pay frequency.
@@ -108,8 +109,11 @@ Click **⚡ Run Due Payments** to trigger `processDuePayments(start, count)`. Th
 ### EmployerPayroll — Key Functions
 
 ```solidity
-// Register an employee — first payment due after one full cycle
+// Register an employee and deploy their linked employee contract
 registerEmployee(address addr, uint256 wageWei, uint256 payFrequency)
+
+// Activate an employee after their linked contract is signed
+activateEmployeeFromPortal(address addr)
 
 // Update an existing employee's wage / frequency
 updateEmployee(address addr, uint256 wageWei, uint256 payFrequency)
@@ -134,43 +138,48 @@ deposit()  // or send ETH directly to the contract address
 
 ## Using the Employee Contract
 
-### Deploying EmployeePortal
-
-Deploy `contracts/employee/EmployeePortal.sol` once per employee wallet. The deployer address becomes the owner.
-
 ### Employee Dashboard
 
-1. Navigate to the **Employee** page and paste your `EmployeePortal` contract address.
-2. Click **Connect** to load your dashboard.
+1. Ask your employer for the linked `EmployeePortal` contract address they created for you.
+2. Navigate to the **Employee** page and paste that contract address.
+3. Click **Connect** to load your agreement.
+4. Review the terms and click **Sign Contract** to activate it.
 
-#### Adding an employer
+#### Reviewing and signing your agreement
 
-Use the **Add Employer** form and enter the `EmployerPayroll` contract address your employer gave you. This registers it in your portal so you can view details and pay history.
+Once connected, the employee dashboard shows:
 
-#### Viewing contract details
+- your linked payroll contract
+- wage and pay frequency
+- profile metadata such as title, department, employment type, and start date
+- whether the agreement is still pending signature or already active
 
-For each registered employer the dashboard shows your wage, pay frequency, last payment date, and whether your record is currently active.
+The first scheduled payment becomes due after one full pay cycle from the time you sign.
 
 #### Viewing pay history
 
-The pay history panel queries `PaymentSent` and `BonusSent` events emitted by the employer contract for your address, giving you a full on-chain record of every payment received.
+The pay history panel queries `PaymentSent` and `BonusSent` events emitted by the linked employer payroll contract for your address, giving you a full on-chain record of every payment received.
 
 ### EmployeePortal — Key Functions
 
 ```solidity
-// Register an employer's payroll contract
-registerEmployer(address employerContract)
+// Employee signs the linked agreement
+signContract()
 
-// Unregister an employer contract
-removeEmployer(address employerContract)
-
-// Read your contract details from a specific employer
-getContractDetails(address employerContract)
+// Read the linked payroll record
+getContractDetails()
     // returns (addr, wageWei, payFrequency, lastPaid, active)
 
-// Get all registered employer contract addresses
-getEmployerContracts()
+// Read linked employee metadata
+getEmployeeMeta()
+
+// Read signature + activation state
+getAgreementStatus()
 ```
+
+### Legacy note
+
+The employee contract is no longer a multi-employer self-deployed portal. It now represents a single employment agreement created by the employer during onboarding.
 
 ---
 
@@ -205,7 +214,7 @@ npm test
 npx hardhat test
 ```
 
-The test suite covers all contract functions, access-control reverts, payment scheduling, and cross-contract reads (42 tests).
+The test suite covers contract creation, employee signing, access-control reverts, payment scheduling, and cross-contract reads.
 
 ### Deploying
 

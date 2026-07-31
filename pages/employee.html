@@ -24,48 +24,36 @@
         <main class="wide">
             <h1 class="page-title">👤 Employee Dashboard</h1>
 
-            <!-- ── Setup section ──────────────────────────── -->
             <div id="setup-section">
                 <div class="alert alert-info">
-                    Connect your wallet first, then enter your employee portal contract address to get started.
+                    Connect your wallet, then enter the employee contract address your employer shared with you.
                 </div>
 
                 <div class="card mt-2">
-                    <h2>Connect to Employee Portal</h2>
+                    <h2>Connect to Your Employee Contract</h2>
                     <form id="connect-portal-form">
                         <div class="form-group">
-                            <label for="portal-addr-input">Your portal contract address</label>
-                            <input type="text" id="portal-addr-input"
-                                placeholder="0x…" autocomplete="off" />
+                            <label for="portal-addr-input">Employee contract address</label>
+                            <input type="text" id="portal-addr-input" placeholder="0x…" autocomplete="off" />
                         </div>
                         <button type="submit" class="btn btn-primary">Connect</button>
                     </form>
                 </div>
-
-                <div class="card mt-2">
-                    <h2>Deploy Your Employee Portal</h2>
-                    <p class="muted-sm">
-                        Each employee deploys their own <code>EmployeePortal</code> contract once,
-                        directly from their connected wallet. After deploying you'll be connected automatically.
-                    </p>
-                    <div class="flex-row">
-                        <button id="deploy-new-btn" type="button" class="btn btn-success">🚀 Deploy New Employee Portal</button>
-                    </div>
-                    <p class="muted-xs mt-2">
-                        The contract source is at
-                        <a href="https://github.com/jgphilpott/smartWage/blob/main/contracts/employee/EmployeePortal.sol" target="_blank" rel="noopener noreferrer"><code>contracts/employee/EmployeePortal.sol</code></a> in this repository.
-                    </p>
-                </div>
             </div>
 
-            <!-- ── Dashboard section ─────────────────────── -->
             <div id="dashboard-section" class="hide">
-
-                <!-- Stats bar -->
                 <div class="card card-row-lg">
                     <div>
-                        <div class="muted-xs">Your wallet</div>
-                        <span id="user-addr-display" class="wallet-address wallet-address-clickable" title="Click to copy"></span>
+                        <div class="muted-xs">Employee contract</div>
+                        <span id="agreement-address-display" class="wallet-address wallet-address-clickable" title="Click to copy"></span>
+                    </div>
+                    <div>
+                        <div class="muted-xs">Employer</div>
+                        <span id="employer-addr-display" class="wallet-address wallet-address-clickable" title="Click to copy"></span>
+                    </div>
+                    <div>
+                        <div class="muted-xs">Status</div>
+                        <span id="agreement-status-badge" class="badge">—</span>
                     </div>
                     <div class="ml-auto gap-sm d-flex">
                         <button id="refresh-btn" class="btn btn-ghost btn-sm">↺ Refresh</button>
@@ -73,63 +61,26 @@
                     </div>
                 </div>
 
-                <!-- Tabs -->
-                <div class="tabs mt-2">
-                    <button class="tab active" onclick="switchTab(event,'tab-employers')">My Employers</button>
-                </div>
-
-                <!-- Employers tab -->
-                <div id="tab-employers" class="tab-panel active">
-                    <div class="card">
-                        <div class="space-between-row">
-                            <h2 class="no-mb">Registered Employers</h2>
-                            <button id="show-add-employer-btn" type="button" class="btn btn-primary btn-sm">+ Add Employer</button>
-                        </div>
-                        <div class="table-wrap">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Contract</th>
-                                        <th>Employer</th>
-                                        <th>Wage / Cycle</th>
-                                        <th>Frequency</th>
-                                        <th>Last Paid</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="contracts-tbody">
-                                    <tr><td colspan="7" class="empty-state">Loading…</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="card mt-2">
+                    <div class="space-between-row">
+                        <h2 class="no-mb">Employment Agreement</h2>
+                        <button id="sign-contract-btn" type="button" class="btn btn-success">✍️ Sign Contract</button>
                     </div>
-
-                    <!-- Add employer form (hidden by default) -->
-                    <div id="add-employer-card" class="card mt-2 hide">
-                        <div class="space-between-row">
-                            <h2 class="no-mb">Register an Employer Contract</h2>
-                            <button id="hide-add-employer-btn" type="button" class="btn btn-ghost btn-sm">✕ Cancel</button>
-                        </div>
-                        <p class="muted-sm">
-                            Ask your employer for their payroll contract address, then add it here
-                            to track your contract details and pay history.
-                        </p>
-                        <form id="register-employer-form">
-                            <div class="form-group">
-                                <label for="employer-contract-input">Employer payroll contract address</label>
-                                <input type="text" id="employer-contract-input"
-                                    placeholder="0x…" required autocomplete="off" />
-                            </div>
-                            <button type="submit" class="btn btn-primary">Add Employer</button>
-                        </form>
+                    <div class="table-wrap">
+                        <table>
+                            <tbody id="agreement-details-tbody">
+                                <tr><td colspan="2" class="empty-state">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-2">
+                        <button id="view-history-btn" type="button" class="btn btn-ghost btn-sm">View Pay History</button>
                     </div>
                 </div>
 
-                <!-- Pay history panel (hidden by default) -->
                 <div id="pay-history-panel" class="card mt-2 hide">
                     <div class="space-between-row">
-                        <h2>Pay History — <span id="history-contract-addr" title=""></span></h2>
+                        <h2>Pay History</h2>
                         <button id="close-history-btn" class="btn btn-ghost btn-sm">✕ Close</button>
                     </div>
                     <div class="table-wrap">
@@ -159,13 +110,5 @@
         <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
         <script src="../js/app.js"></script>
         <script src="../js/employee.js"></script>
-        <script>
-            function switchTab(event, tabId) {
-                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-                document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-                event.target.classList.add("active");
-                document.getElementById(tabId).classList.add("active");
-            }
-        </script>
     </body>
 </html>
