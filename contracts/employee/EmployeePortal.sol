@@ -3,10 +3,13 @@ pragma solidity ^0.8.26;
 
 /**
  * @title IEmployerPayroll
- * @notice Minimal interface used by EmployeePortal to read data from an EmployerPayroll contract.
+ * @notice Minimal interface used by EmployeePortal to interact with the linked EmployerPayroll contract.
  */
 interface IEmployerPayroll {
+    function activateEmployeeFromPortal(address addr) external;
+
     function employer() external view returns (address);
+
     function getEmployee(address addr)
         external
         view
@@ -17,16 +20,26 @@ interface IEmployerPayroll {
             uint256,   // lastPaid
             bool       // active
         );
+
+    function getEmployeeMeta(address addr)
+        external
+        view
+        returns (
+            string memory, // name
+            string memory, // department
+            string memory, // jobTitle
+            string memory, // jobDescription
+            string memory, // employmentType
+            string memory  // startDate
+        );
 }
 
 /**
  * @title EmployeePortal
- * @notice Deployed by an individual employee.  It lets them maintain a list of
- *         employer payroll contracts, and provides a single place to read their
- *         contract details across multiple employers.
- *
- *         Pay history is queryable off-chain by filtering the PaymentSent events
- *         emitted by each EmployerPayroll contract for the employee's address.
+ * @notice Deployed by an employer during registration and permanently linked to
+ *         one EmployerPayroll contract and one employee wallet. The employee can
+ *         connect to this contract, review the linked job details, and sign to
+ *         activate the employment relationship.
  */
 contract EmployeePortal {
 
@@ -34,17 +47,16 @@ contract EmployeePortal {
     //  State
     // ─────────────────────────────────────────────
 
-    address public employee;
-
-    address[] private _employerContracts;
-    mapping(address => bool) private _registered;
+    address public immutable employerPayroll;
+    address public immutable employer;
+    address public immutable employee;
+    bool public signed;
 
     // ─────────────────────────────────────────────
     //  Events
     // ─────────────────────────────────────────────
 
-    event EmployerAdded(address indexed employerContract);
-    event EmployerRemoved(address indexed employerContract);
+    event ContractSigned(address indexed employee, address indexed employerPayroll);
 
     // ─────────────────────────────────────────────
     //  Modifiers
@@ -59,36 +71,28 @@ contract EmployeePortal {
     //  Constructor
     // ─────────────────────────────────────────────
 
-    constructor() {
-        employee = msg.sender;
+    constructor(address employerPayroll_, address employer_, address employee_) {
+        require(employerPayroll_ != address(0), "EmployeePortal: zero payroll");
+        require(employer_ != address(0), "EmployeePortal: zero employer");
+        require(employee_ != address(0), "EmployeePortal: zero employee");
+
+        employerPayroll = employerPayroll_;
+        employer = employer_;
+        employee = employee_;
     }
 
     // ─────────────────────────────────────────────
-    //  Employer management
+    //  Agreement lifecycle
     // ─────────────────────────────────────────────
 
     /**
-     * @notice Register an EmployerPayroll contract as one of your employers.
-     * @param employerContract Address of the deployed EmployerPayroll contract.
+     * @notice Sign the linked employment agreement and activate the employee in payroll.
      */
-    function registerEmployer(address employerContract) external onlyEmployee {
-        require(employerContract != address(0), "EmployeePortal: zero address");
-        require(!_registered[employerContract], "EmployeePortal: employer already registered");
-
-        _employerContracts.push(employerContract);
-        _registered[employerContract] = true;
-
-        emit EmployerAdded(employerContract);
-    }
-
-    /**
-     * @notice Unregister an employer contract (removes it from your tracked list).
-     * @param employerContract Address of the deployed EmployerPayroll contract.
-     */
-    function removeEmployer(address employerContract) external onlyEmployee {
-        require(_registered[employerContract], "EmployeePortal: employer not registered");
-        _registered[employerContract] = false;
-        emit EmployerRemoved(employerContract);
+    function signContract() external onlyEmployee {
+        require(!signed, "EmployeePortal: contract already signed");
+        signed = true;
+        IEmployerPayroll(employerPayroll).activateEmployeeFromPortal(employee);
+        emit ContractSigned(employee, employerPayroll);
     }
 
     // ─────────────────────────────────────────────
@@ -96,15 +100,14 @@ contract EmployeePortal {
     // ─────────────────────────────────────────────
 
     /**
-     * @notice Fetch this employee's contract details from a specific EmployerPayroll.
-     * @param employerContract Address of the deployed EmployerPayroll contract.
+     * @notice Fetch this employee's contract details from the linked EmployerPayroll.
      * @return addr          The employee address stored in the employer's contract.
      * @return wageWei       Wage per cycle in wei.
      * @return payFrequency  Seconds between pay cycles.
      * @return lastPaid      Unix timestamp of last payment.
      * @return active        Whether the employee record is active.
      */
-    function getContractDetails(address employerContract)
+    function getContractDetails()
         external
         view
         returns (
@@ -115,35 +118,32 @@ contract EmployeePortal {
             bool    active
         )
     {
-        return IEmployerPayroll(employerContract).getEmployee(employee);
+        return IEmployerPayroll(employerPayroll).getEmployee(employee);
     }
 
     /**
-     * @notice Fetch the employer wallet address from a registered EmployerPayroll contract.
-     * @param employerContract Address of the deployed EmployerPayroll contract.
+     * @notice Fetch the linked employee metadata from EmployerPayroll.
      */
-    function getEmployerAddress(address employerContract)
+    function getEmployeeMeta()
         external
         view
-        returns (address)
+        returns (
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory
+        )
     {
-        return IEmployerPayroll(employerContract).employer();
+        return IEmployerPayroll(employerPayroll).getEmployeeMeta(employee);
     }
 
     /**
-     * @notice Return all registered EmployerPayroll contract addresses.
+     * @notice Return whether the employee has signed and whether the linked payroll record is active.
      */
-    function getEmployerContracts() external view returns (address[] memory) {
-        return _employerContracts;
-    }
-
-    /// @notice Total number of employer contracts ever registered (including removed).
-    function getEmployerCount() external view returns (uint256) {
-        return _employerContracts.length;
-    }
-
-    /// @notice Check whether a specific employer contract is currently registered.
-    function isRegistered(address employerContract) external view returns (bool) {
-        return _registered[employerContract];
+    function getAgreementStatus() external view returns (bool contractSigned, bool active) {
+        (, , , , active) = IEmployerPayroll(employerPayroll).getEmployee(employee);
+        return (signed, active);
     }
 }
