@@ -48,8 +48,8 @@ async function refreshDashboard() {
         agreementDisplay.onclick = () => copyAddressToClipboard(portalAddress);
 
         const employerDisplay = document.getElementById("employer-addr-display");
-        employerDisplay.textContent = shortAddress(employerAddr);
-        employerDisplay.title = employerAddr;
+        employerDisplay.textContent = employerAddr;
+        employerDisplay.title = "Click to copy";
         employerDisplay.onclick = () => copyAddressToClipboard(employerAddr);
 
         const [contractSigned, active] = status;
@@ -110,6 +110,7 @@ async function viewPayHistory() {
     const historyBody = document.getElementById("history-tbody");
     if (!linkedPayrollAddress) return;
 
+    document.getElementById("agreement-card").style.display = "none";
     historyEl.style.display = "block";
     historyBody.innerHTML = `<tr><td colspan="3" class="empty-state">Loading…</td></tr>`;
 
@@ -235,6 +236,7 @@ async function onWalletReady() {
     document.getElementById("refresh-btn").addEventListener("click", refreshDashboard);
     document.getElementById("close-history-btn").addEventListener("click", () => {
         document.getElementById("pay-history-panel").style.display = "none";
+        document.getElementById("agreement-card").style.display = "block";
     });
 
     if (saved) {

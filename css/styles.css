@@ -351,6 +351,12 @@ tr:last-child td {
     border-bottom: none;
 }
 
+/* Key/value tables (th label + td value rows, no thead) should keep the
+   border on the last row so both cells look consistent. */
+#agreement-details-tbody tr:last-child td {
+    border-bottom: 1px solid var(--border);
+}
+
 tr:hover td {
     background: rgba(255,255,255,0.03);
 }

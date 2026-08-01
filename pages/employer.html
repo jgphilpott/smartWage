@@ -93,8 +93,11 @@
                     <div id="employee-card" class="card">
                         <div class="space-between-row">
                             <h2 class="no-mb">Active Employees</h2>
-                            <button id="show-register-btn" type="button" class="btn btn-primary btn-sm">+ Register Employee</button>
+                            <button id="show-register-btn" type="button" class="btn btn-primary">+ Register Employee</button>
                         </div>
+                        <p class="muted-xs mb-2">
+                            Everyone currently registered on this payroll contract, along with their wage, schedule, and status.
+                        </p>
                         <div class="table-wrap">
                             <table>
                                 <thead>
@@ -120,11 +123,11 @@
                     <div id="register-card" class="card mt-2 hide">
                         <div class="space-between-row">
                             <h2 class="no-mb">Register New Employee</h2>
-                            <button id="hide-register-btn" type="button" class="btn btn-ghost btn-sm">✕ Cancel</button>
+                            <button id="hide-register-btn" type="button" class="btn btn-ghost">✕ Cancel</button>
                         </div>
                         <form id="register-form">
-                            <p class="muted-sm">
-                                Registering an employee now also creates their linked employee contract automatically.
+                            <p class="muted-sm mb-2">
+                                Registering an employee also creates an employee contract automatically.
                                 Share that contract address with the employee so they can connect and sign.
                             </p>
                             <div class="form-group">
@@ -193,8 +196,8 @@
                         <div class="space-between-row">
                             <h2 class="no-mb">Funds Activity</h2>
                             <div class="flex-row gap-sm">
-                                <button id="show-deposit-btn" type="button" class="btn btn-primary btn-sm">+ Deposit Funds</button>
                                 <button id="refresh-funds-history-btn" type="button" class="btn btn-ghost btn-sm">↺ Refresh</button>
+                                <button id="show-deposit-btn" type="button" class="btn btn-primary">+ Deposit Funds</button>
                             </div>
                         </div>
                         <p class="muted-xs mb-2">
@@ -221,9 +224,9 @@
                     <div id="deposit-card" class="card mt-2 hide">
                         <div class="space-between-row">
                             <h2 class="no-mb">Deposit Funds</h2>
-                            <button id="hide-deposit-btn" type="button" class="btn btn-ghost btn-sm">✕ Cancel</button>
+                            <button id="hide-deposit-btn" type="button" class="btn btn-ghost">✕ Cancel</button>
                         </div>
-                        <p class="muted-sm">
+                        <p class="muted-sm mb-2">
                             Add ETH to your payroll contract to fund employee payments.
                         </p>
                         <form id="deposit-form">
