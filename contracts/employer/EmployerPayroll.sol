@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import "../employee/EmployeePortal.sol";
+
 /**
  * @title EmployerPayroll
  * @notice Deployed by an employer to manage payroll for their employees.
@@ -36,6 +38,8 @@ contract EmployerPayroll {
 
     mapping(address => Employee)     private _employees;
     mapping(address => EmployeeMeta) private _employeeMeta;
+    mapping(address => address)      private _employeeContracts;
+    mapping(address => bool)         private _employeeRemoved;
     address[] private _employeeList;
 
     // ─────────────────────────────────────────────
@@ -43,10 +47,11 @@ contract EmployerPayroll {
     // ─────────────────────────────────────────────
 
     event FundsDeposited(address indexed from, uint256 amount);
-    event EmployeeRegistered(address indexed employee, uint256 wageWei, uint256 payFrequency);
+    event EmployeeRegistered(address indexed employee, address indexed employeeContract, uint256 wageWei, uint256 payFrequency);
+    event EmployeeActivated(address indexed employee, address indexed employeeContract);
     event EmployeeUpdated(address indexed employee, uint256 wageWei, uint256 payFrequency);
     event EmployeeMetaUpdated(address indexed employee);
-    event EmployeeRemoved(address indexed employee);
+    event EmployeeRemoved(address indexed employee, address indexed employeeContract);
     event PaymentSent(address indexed employee, uint256 amount, uint256 timestamp);
     event BonusSent(address indexed employee, uint256 amount);
 
@@ -111,15 +116,19 @@ contract EmployerPayroll {
         require(addr != address(0), "EmployerPayroll: zero address");
         require(wageWei > 0, "EmployerPayroll: wage must be > 0");
         require(payFrequency > 0, "EmployerPayroll: pay frequency must be > 0");
-        require(!_employees[addr].active, "EmployerPayroll: employee already registered");
+        require(_employeeContracts[addr] == address(0), "EmployerPayroll: employee already registered");
+
+        EmployeePortal employeePortal = new EmployeePortal(address(this), employer, addr);
+        address employeeContract = address(employeePortal);
 
         _employees[addr] = Employee({
             addr: addr,
             wageWei: wageWei,
             payFrequency: payFrequency,
-            lastPaid: block.timestamp,   // first payment due after one full cycle
-            active: true
+            lastPaid: 0,
+            active: false
         });
+        _employeeContracts[addr] = employeeContract;
         _employeeList.push(addr);
 
         _employeeMeta[addr] = EmployeeMeta({
@@ -131,7 +140,7 @@ contract EmployerPayroll {
             startDate: startDate
         });
 
-        emit EmployeeRegistered(addr, wageWei, payFrequency);
+        emit EmployeeRegistered(addr, employeeContract, wageWei, payFrequency);
         emit EmployeeMetaUpdated(addr);
     }
 
@@ -158,7 +167,7 @@ contract EmployerPayroll {
         string calldata employmentType,
         string calldata startDate
     ) external onlyEmployer {
-        require(_employees[addr].active, "EmployerPayroll: employee not found");
+        _requireCurrentEmployee(addr);
         require(wageWei > 0, "EmployerPayroll: wage must be > 0");
         require(payFrequency > 0, "EmployerPayroll: pay frequency must be > 0");
 
@@ -197,7 +206,7 @@ contract EmployerPayroll {
         string calldata employmentType,
         string calldata startDate
     ) external onlyEmployer {
-        require(_employees[addr].active, "EmployerPayroll: employee not found");
+        _requireCurrentEmployee(addr);
 
         _employeeMeta[addr] = EmployeeMeta({
             name: name,
@@ -216,10 +225,11 @@ contract EmployerPayroll {
      * @param addr Employee wallet address.
      */
     function removeEmployee(address addr) external onlyEmployer {
-        require(_employees[addr].active, "EmployerPayroll: employee not found");
+        _requireCurrentEmployee(addr);
         _employees[addr].active = false;
+        _employeeRemoved[addr] = true;
         delete _employeeMeta[addr];
-        emit EmployeeRemoved(addr);
+        emit EmployeeRemoved(addr, _employeeContracts[addr]);
     }
 
     // ─────────────────────────────────────────────
@@ -232,7 +242,7 @@ contract EmployerPayroll {
      */
     function payEmployee(address addr) external onlyEmployer {
         Employee storage emp = _employees[addr];
-        require(emp.active, "EmployerPayroll: employee not found");
+        require(emp.active && !_employeeRemoved[addr], "EmployerPayroll: employee not active");
         require(address(this).balance >= emp.wageWei, "EmployerPayroll: insufficient balance");
 
         emp.lastPaid = block.timestamp;
@@ -277,7 +287,7 @@ contract EmployerPayroll {
      * @param amount Amount in wei.
      */
     function sendBonus(address addr, uint256 amount) external onlyEmployer {
-        require(_employees[addr].active, "EmployerPayroll: employee not found");
+        require(_employees[addr].active && !_employeeRemoved[addr], "EmployerPayroll: employee not active");
         require(amount > 0, "EmployerPayroll: bonus must be > 0");
         require(address(this).balance >= amount, "EmployerPayroll: insufficient balance");
 
@@ -331,6 +341,22 @@ contract EmployerPayroll {
         return (m.name, m.department, m.jobTitle, m.jobDescription, m.employmentType, m.startDate);
     }
 
+    /// @notice Get the linked employee agreement contract and status flags.
+    function getEmployeeAgreement(address addr)
+        external
+        view
+        returns (address employeeContract, bool active, bool removed)
+    {
+        employeeContract = _employeeContracts[addr];
+        active = _employees[addr].active;
+        removed = _employeeRemoved[addr];
+    }
+
+    /// @notice Get the linked employee agreement contract address.
+    function getEmployeePortal(address addr) external view returns (address) {
+        return _employeeContracts[addr];
+    }
+
     /// @notice Return the list of all employee addresses (including removed ones).
     function getEmployeeList() external view returns (address[] memory) {
         return _employeeList;
@@ -349,7 +375,23 @@ contract EmployerPayroll {
     /// @notice Whether a given employee is currently due for payment.
     function isPaymentDue(address addr) external view returns (bool) {
         Employee storage emp = _employees[addr];
-        return emp.active && _isDue(emp);
+        return emp.active && !_employeeRemoved[addr] && _isDue(emp);
+    }
+
+    /**
+     * @notice Activate an employee after they sign their linked employee agreement.
+     * @param addr Employee wallet address.
+     */
+    function activateEmployeeFromPortal(address addr) external {
+        address employeeContract = _employeeContracts[addr];
+        require(employeeContract != address(0), "EmployerPayroll: employee not found");
+        require(!_employeeRemoved[addr], "EmployerPayroll: employee removed");
+        require(msg.sender == employeeContract, "EmployerPayroll: caller is not employee contract");
+        require(!_employees[addr].active, "EmployerPayroll: employee already active");
+
+        _employees[addr].lastPaid = block.timestamp;
+        _employees[addr].active = true;
+        emit EmployeeActivated(addr, employeeContract);
     }
 
     // ─────────────────────────────────────────────
@@ -358,5 +400,9 @@ contract EmployerPayroll {
 
     function _isDue(Employee storage emp) internal view returns (bool) {
         return block.timestamp >= emp.lastPaid + emp.payFrequency;
+    }
+
+    function _requireCurrentEmployee(address addr) internal view {
+        require(_employeeContracts[addr] != address(0) && !_employeeRemoved[addr], "EmployerPayroll: employee not found");
     }
 }

@@ -1,28 +1,43 @@
 // scripts/deploy.js
-// Deploy EmployerPayroll and EmployeePortal (local development helper)
+// Deploy EmployerPayroll and register one sample employee agreement (local development helper)
 const fs = require('fs');
 const path = require('path');
 
 async function main() {
-  const [deployer] = await ethers.getSigners();
-  console.log('Deploying contracts with account:', deployer.address);
+  const [employer, employee] = await ethers.getSigners();
+  console.log('Deploying contracts with employer account:', employer.address);
 
   // Employer payroll contract
   const EmployerFactory = await ethers.getContractFactory('EmployerPayroll');
-  const employer = await EmployerFactory.deploy();
-  await employer.waitForDeployment();
-  console.log('EmployerPayroll deployed to:', employer.target);
+  const payroll = await EmployerFactory.connect(employer).deploy();
+  await payroll.waitForDeployment();
+  console.log('EmployerPayroll deployed to:', payroll.target);
 
-  // Employee portal (example deployment — portals are usually deployed per-employee)
-  const EmployeeFactory = await ethers.getContractFactory('EmployeePortal');
-  const employeePortal = await EmployeeFactory.deploy();
-  await employeePortal.waitForDeployment();
-  console.log('EmployeePortal deployed to:', employeePortal.target);
+  await employer.sendTransaction({
+    to: payroll.target,
+    value: ethers.parseEther('1')
+  });
+
+  await (await payroll.registerEmployee(
+    employee.address,
+    ethers.parseEther('0.01'),
+    7 * 24 * 60 * 60,
+    'Sample Employee',
+    'Engineering',
+    'Developer',
+    'Example development agreement',
+    'Full-time',
+    '2025-01-15'
+  )).wait();
+
+  const employeePortalAddress = await payroll.getEmployeePortal(employee.address);
+  console.log('Linked EmployeePortal deployed to:', employeePortalAddress);
 
   const out = {
-    deployer: deployer.address,
-    EmployerPayroll: employer.target,
-    EmployeePortal: employeePortal.target
+    employer: employer.address,
+    employee: employee.address,
+    EmployerPayroll: payroll.target,
+    EmployeePortal: employeePortalAddress
   };
 
   const outPath = path.join(__dirname, '..', 'deployed.json');

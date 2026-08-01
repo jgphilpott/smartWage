@@ -14,7 +14,6 @@ describe("EmployeePortal", function () {
     beforeEach(async function () {
         [employer, employee, other] = await ethers.getSigners();
 
-        // Deploy payroll contract as the employer
         const EmployerPayroll = await ethers.getContractFactory("EmployerPayroll");
         payroll = await EmployerPayroll.connect(employer).deploy();
         await employer.sendTransaction({
@@ -22,129 +21,106 @@ describe("EmployeePortal", function () {
             value: ethers.parseEther("1")
         });
 
-        // Register the employee in the payroll contract
-        await payroll.connect(employer).registerEmployee(employee.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+        await payroll.connect(employer).registerEmployee(
+            employee.address,
+            WAGE,
+            ONE_WEEK,
+            "Jane Smith",
+            "Engineering",
+            "Software Engineer",
+            "Builds cool things",
+            "Full-time",
+            "2025-01-15"
+        );
 
-        // Deploy the employee's portal contract
-        const EmployeePortal = await ethers.getContractFactory("EmployeePortal");
-        portal = await EmployeePortal.connect(employee).deploy();
+        portal = await ethers.getContractAt(
+            "EmployeePortal",
+            await payroll.getEmployeePortal(employee.address)
+        );
     });
-
-    // ──────────────────────────────────────────
-    //  Deployment
-    // ──────────────────────────────────────────
 
     describe("Deployment", function () {
-        it("sets the deployer as employee", async function () {
+        it("stores the linked employer, payroll, and employee", async function () {
             expect(await portal.employee()).to.equal(employee.address);
+            expect(await portal.employer()).to.equal(employer.address);
+            expect(await portal.employerPayroll()).to.equal(payroll.target);
+            expect(await portal.signed()).to.be.false;
+        });
+
+        it("rejects zero constructor addresses", async function () {
+            const EmployeePortal = await ethers.getContractFactory("EmployeePortal");
+            await expect(
+                EmployeePortal.deploy(ethers.ZeroAddress, employer.address, employee.address)
+            ).to.be.revertedWith("EmployeePortal: zero payroll");
         });
     });
 
-    // ──────────────────────────────────────────
-    //  registerEmployer
-    // ──────────────────────────────────────────
+    describe("signContract()", function () {
+        it("allows the linked employee to sign and activates payroll", async function () {
+            await expect(portal.connect(employee).signContract())
+                .to.emit(portal, "ContractSigned")
+                .withArgs(employee.address, payroll.target);
 
-    describe("registerEmployer()", function () {
-        it("adds employer contract and emits EmployerAdded", async function () {
-            await expect(portal.connect(employee).registerEmployer(payroll.target))
-                .to.emit(portal, "EmployerAdded")
-                .withArgs(payroll.target);
+            expect(await portal.signed()).to.be.true;
 
-            expect(await portal.isRegistered(payroll.target)).to.be.true;
-        });
-
-        it("increments employer count", async function () {
-            await portal.connect(employee).registerEmployer(payroll.target);
-            expect(await portal.getEmployerCount()).to.equal(1);
+            const [, , , lastPaid, active] = await payroll.getEmployee(employee.address);
+            expect(active).to.be.true;
+            expect(lastPaid).to.be.gt(0);
         });
 
         it("reverts if caller is not the employee", async function () {
             await expect(
-                portal.connect(other).registerEmployer(payroll.target)
+                portal.connect(other).signContract()
             ).to.be.revertedWith("EmployeePortal: caller is not the employee");
         });
 
-        it("reverts if already registered", async function () {
-            await portal.connect(employee).registerEmployer(payroll.target);
-            await expect(
-                portal.connect(employee).registerEmployer(payroll.target)
-            ).to.be.revertedWith("EmployeePortal: employer already registered");
-        });
+        it("reverts when signing twice", async function () {
+            await portal.connect(employee).signContract();
 
-        it("reverts on zero address", async function () {
             await expect(
-                portal.connect(employee).registerEmployer(ethers.ZeroAddress)
-            ).to.be.revertedWith("EmployeePortal: zero address");
+                portal.connect(employee).signContract()
+            ).to.be.revertedWith("EmployeePortal: contract already signed");
         });
     });
-
-    // ──────────────────────────────────────────
-    //  removeEmployer
-    // ──────────────────────────────────────────
-
-    describe("removeEmployer()", function () {
-        beforeEach(async function () {
-            await portal.connect(employee).registerEmployer(payroll.target);
-        });
-
-        it("marks employer as unregistered and emits EmployerRemoved", async function () {
-            await expect(portal.connect(employee).removeEmployer(payroll.target))
-                .to.emit(portal, "EmployerRemoved")
-                .withArgs(payroll.target);
-
-            expect(await portal.isRegistered(payroll.target)).to.be.false;
-        });
-
-        it("reverts if caller is not the employee", async function () {
-            await expect(
-                portal.connect(other).removeEmployer(payroll.target)
-            ).to.be.revertedWith("EmployeePortal: caller is not the employee");
-        });
-
-        it("reverts if employer not registered", async function () {
-            await expect(
-                portal.connect(employee).removeEmployer(other.address)
-            ).to.be.revertedWith("EmployeePortal: employer not registered");
-        });
-    });
-
-    // ──────────────────────────────────────────
-    //  getContractDetails
-    // ──────────────────────────────────────────
 
     describe("getContractDetails()", function () {
-        it("returns the employee's details from the employer contract", async function () {
-            const [addr, wageWei, payFrequency, , active] =
-                await portal.connect(employee).getContractDetails(payroll.target);
+        it("returns the linked employee's details from payroll", async function () {
+            const [addr, wageWei, payFrequency, lastPaid, active] =
+                await portal.getContractDetails();
 
             expect(addr).to.equal(employee.address);
             expect(wageWei).to.equal(WAGE);
             expect(payFrequency).to.equal(ONE_WEEK);
+            expect(lastPaid).to.equal(0);
+            expect(active).to.be.false;
+        });
+    });
+
+    describe("getEmployeeMeta()", function () {
+        it("returns the linked employee metadata from payroll", async function () {
+            const [name, department, jobTitle, jobDescription, employmentType, startDate] =
+                await portal.getEmployeeMeta();
+
+            expect(name).to.equal("Jane Smith");
+            expect(department).to.equal("Engineering");
+            expect(jobTitle).to.equal("Software Engineer");
+            expect(jobDescription).to.equal("Builds cool things");
+            expect(employmentType).to.equal("Full-time");
+            expect(startDate).to.equal("2025-01-15");
+        });
+    });
+
+    describe("getAgreementStatus()", function () {
+        it("returns signed and active status", async function () {
+            let [contractSigned, active] = await portal.getAgreementStatus();
+            expect(contractSigned).to.be.false;
+            expect(active).to.be.false;
+
+            await portal.connect(employee).signContract();
+
+            [contractSigned, active] = await portal.getAgreementStatus();
+            expect(contractSigned).to.be.true;
             expect(active).to.be.true;
-        });
-    });
-
-    // ──────────────────────────────────────────
-    //  getEmployerAddress
-    // ──────────────────────────────────────────
-
-    describe("getEmployerAddress()", function () {
-        it("returns the employer wallet address", async function () {
-            expect(
-                await portal.getEmployerAddress(payroll.target)
-            ).to.equal(employer.address);
-        });
-    });
-
-    // ──────────────────────────────────────────
-    //  getEmployerContracts
-    // ──────────────────────────────────────────
-
-    describe("getEmployerContracts()", function () {
-        it("returns registered employer contract addresses", async function () {
-            await portal.connect(employee).registerEmployer(payroll.target);
-            const contracts = await portal.getEmployerContracts();
-            expect(contracts).to.include(payroll.target);
         });
     });
 });

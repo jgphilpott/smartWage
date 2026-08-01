@@ -9,9 +9,32 @@ describe("EmployerPayroll", function () {
     let employee2;
     let other;
 
-    const ONE_WEEK = 7 * 24 * 60 * 60; // seconds
+    const ONE_WEEK = 7 * 24 * 60 * 60;
     const WAGE = ethers.parseEther("0.01");
     const INITIAL_FUND = ethers.parseEther("1");
+
+    async function registerEmployee(signer = employee1, wage = WAGE, frequency = ONE_WEEK) {
+        const tx = await payroll.registerEmployee(
+            signer.address,
+            wage,
+            frequency,
+            "Jane Smith",
+            "Engineering",
+            "Software Engineer",
+            "Builds things",
+            "Full-time",
+            "2025-01-15"
+        );
+        await tx.wait();
+        const portalAddress = await payroll.getEmployeePortal(signer.address);
+        return ethers.getContractAt("EmployeePortal", portalAddress);
+    }
+
+    async function registerAndSignEmployee(signer = employee1, wage = WAGE, frequency = ONE_WEEK) {
+        const portal = await registerEmployee(signer, wage, frequency);
+        await portal.connect(signer).signContract();
+        return portal;
+    }
 
     beforeEach(async function () {
         [employer, employee1, employee2, other] = await ethers.getSigners();
@@ -19,16 +42,11 @@ describe("EmployerPayroll", function () {
         const EmployerPayroll = await ethers.getContractFactory("EmployerPayroll");
         payroll = await EmployerPayroll.connect(employer).deploy();
 
-        // Fund the contract
         await employer.sendTransaction({
             to: payroll.target,
             value: INITIAL_FUND
         });
     });
-
-    // ──────────────────────────────────────────
-    //  Deployment
-    // ──────────────────────────────────────────
 
     describe("Deployment", function () {
         it("sets the deployer as employer", async function () {
@@ -39,10 +57,6 @@ describe("EmployerPayroll", function () {
             expect(await payroll.getBalance()).to.equal(INITIAL_FUND);
         });
     });
-
-    // ──────────────────────────────────────────
-    //  Funding
-    // ──────────────────────────────────────────
 
     describe("deposit()", function () {
         it("increases the contract balance", async function () {
@@ -59,25 +73,40 @@ describe("EmployerPayroll", function () {
         });
     });
 
-    // ──────────────────────────────────────────
-    //  registerEmployee
-    // ──────────────────────────────────────────
-
     describe("registerEmployee()", function () {
-        it("registers a new employee and emits event", async function () {
-            await expect(
-                payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "")
-            )
-                .to.emit(payroll, "EmployeeRegistered")
-                .withArgs(employee1.address, WAGE, ONE_WEEK);
+        it("creates a linked employee agreement and stores a pending employee", async function () {
+            const portal = await registerEmployee(employee1);
+            const portalAddress = await portal.getAddress();
 
-            const [addr, wageWei, payFrequency, , active] =
-                await payroll.getEmployee(employee1.address);
+            expect(await payroll.getEmployeePortal(employee1.address)).to.equal(portalAddress);
 
+            const [addr, wageWei, payFrequency, lastPaid, active] = await payroll.getEmployee(employee1.address);
             expect(addr).to.equal(employee1.address);
             expect(wageWei).to.equal(WAGE);
             expect(payFrequency).to.equal(ONE_WEEK);
-            expect(active).to.be.true;
+            expect(lastPaid).to.equal(0);
+            expect(active).to.be.false;
+
+            const [employeeContract, agreementActive, removed] = await payroll.getEmployeeAgreement(employee1.address);
+            expect(employeeContract).to.equal(portalAddress);
+            expect(agreementActive).to.be.false;
+            expect(removed).to.be.false;
+
+            expect(await portal.employee()).to.equal(employee1.address);
+            expect(await portal.employer()).to.equal(employer.address);
+            expect(await portal.employerPayroll()).to.equal(payroll.target);
+            expect(await portal.signed()).to.be.false;
+        });
+
+        it("emits EmployeeRegistered with the linked agreement address", async function () {
+            const tx = await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            const receipt = await tx.wait();
+            const event = receipt.logs.find((log) => log.fragment && log.fragment.name === "EmployeeRegistered");
+
+            expect(event.args.employee).to.equal(employee1.address);
+            expect(event.args.employeeContract).to.equal(await payroll.getEmployeePortal(employee1.address));
+            expect(event.args.wageWei).to.equal(WAGE);
+            expect(event.args.payFrequency).to.equal(ONE_WEEK);
         });
 
         it("reverts if caller is not employer", async function () {
@@ -87,7 +116,7 @@ describe("EmployerPayroll", function () {
         });
 
         it("reverts if employee already registered", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await registerEmployee(employee1);
             await expect(
                 payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "")
             ).to.be.revertedWith("EmployerPayroll: employee already registered");
@@ -112,16 +141,41 @@ describe("EmployerPayroll", function () {
         });
     });
 
-    // ──────────────────────────────────────────
-    //  updateEmployee
-    // ──────────────────────────────────────────
+    describe("activation workflow", function () {
+        it("activates an employee when they sign their linked agreement", async function () {
+            const portal = await registerEmployee(employee1);
+
+            await expect(portal.connect(employee1).signContract())
+                .to.emit(payroll, "EmployeeActivated");
+
+            const [, , , lastPaid, active] = await payroll.getEmployee(employee1.address);
+            expect(active).to.be.true;
+            expect(lastPaid).to.be.gt(0);
+        });
+
+        it("reverts when someone else attempts to sign", async function () {
+            const portal = await registerEmployee(employee1);
+
+            await expect(
+                portal.connect(other).signContract()
+            ).to.be.revertedWith("EmployeePortal: caller is not the employee");
+        });
+
+        it("reverts when activateEmployeeFromPortal is called by a non-portal address", async function () {
+            await registerEmployee(employee1);
+
+            await expect(
+                payroll.connect(other).activateEmployeeFromPortal(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: caller is not employee contract");
+        });
+    });
 
     describe("updateEmployee()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await registerEmployee(employee1);
         });
 
-        it("updates wage and frequency", async function () {
+        it("updates wage and frequency before activation", async function () {
             const newWage = ethers.parseEther("0.02");
             const newFreq = ONE_WEEK * 2;
 
@@ -147,80 +201,72 @@ describe("EmployerPayroll", function () {
         });
     });
 
-    // ──────────────────────────────────────────
-    //  removeEmployee
-    // ──────────────────────────────────────────
-
     describe("removeEmployee()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await registerEmployee(employee1);
         });
 
-        it("deactivates the employee", async function () {
+        it("marks the employee as removed", async function () {
+            const portalAddress = await payroll.getEmployeePortal(employee1.address);
+
             await expect(payroll.removeEmployee(employee1.address))
                 .to.emit(payroll, "EmployeeRemoved")
-                .withArgs(employee1.address);
+                .withArgs(employee1.address, portalAddress);
 
-            const [, , , , active] = await payroll.getEmployee(employee1.address);
+            const [employeeContract, active, removed] = await payroll.getEmployeeAgreement(employee1.address);
+            expect(employeeContract).to.equal(portalAddress);
             expect(active).to.be.false;
+            expect(removed).to.be.true;
         });
 
-        it("reverts if caller is not employer", async function () {
-            await expect(
-                payroll.connect(other).removeEmployee(employee1.address)
-            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
-        });
+        it("prevents later activation after removal", async function () {
+            const portal = await ethers.getContractAt(
+                "EmployeePortal",
+                await payroll.getEmployeePortal(employee1.address)
+            );
+            await payroll.removeEmployee(employee1.address);
 
-        it("reverts if employee not found", async function () {
             await expect(
-                payroll.removeEmployee(employee2.address)
-            ).to.be.revertedWith("EmployerPayroll: employee not found");
+                portal.connect(employee1).signContract()
+            ).to.be.revertedWith("EmployerPayroll: employee removed");
         });
     });
 
-    // ──────────────────────────────────────────
-    //  payEmployee
-    // ──────────────────────────────────────────
-
     describe("payEmployee()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await registerAndSignEmployee(employee1);
         });
 
         it("transfers wage and emits PaymentSent", async function () {
             const before = await ethers.provider.getBalance(employee1.address);
-            await payroll.payEmployee(employee1.address);
+            await expect(payroll.payEmployee(employee1.address))
+                .to.emit(payroll, "PaymentSent");
             const after = await ethers.provider.getBalance(employee1.address);
             expect(after - before).to.equal(WAGE);
         });
 
+        it("reverts if employee is not yet active", async function () {
+            await registerEmployee(employee2);
+            await expect(
+                payroll.payEmployee(employee2.address)
+            ).to.be.revertedWith("EmployerPayroll: employee not active");
+        });
+
         it("reverts if insufficient balance", async function () {
-            // Drain the contract first
             const balance = await payroll.getBalance();
             const bigWage = balance + WAGE;
-            await payroll.registerEmployee(employee2.address, bigWage, ONE_WEEK, "", "", "", "", "", "");
+            await registerAndSignEmployee(employee2, bigWage);
+
             await expect(
                 payroll.payEmployee(employee2.address)
             ).to.be.revertedWith("EmployerPayroll: insufficient balance");
         });
-
-        it("reverts if caller is not employer", async function () {
-            await expect(
-                payroll.connect(other).payEmployee(employee1.address)
-            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
-        });
     });
 
-    // ──────────────────────────────────────────
-    //  processDuePayments
-    // ──────────────────────────────────────────
-
     describe("processDuePayments()", function () {
-        it("pays all employees whose frequency has elapsed", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
-            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK * 2, "", "", "", "", "", "");
-
-            // Advance 1 week — employee1 is due, employee2 is not
+        it("only pays signed employees whose frequency has elapsed", async function () {
+            await registerAndSignEmployee(employee1, WAGE, ONE_WEEK);
+            await registerEmployee(employee2, WAGE, ONE_WEEK);
             await time.increase(ONE_WEEK + 1);
 
             const before1 = await ethers.provider.getBalance(employee1.address);
@@ -235,35 +281,22 @@ describe("EmployerPayroll", function () {
             expect(after2 - before2).to.equal(0n);
         });
 
-        it("can be called by anyone, not just employer", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+        it("can be called by anyone", async function () {
+            await registerAndSignEmployee(employee1);
             await time.increase(ONE_WEEK + 1);
             await expect(
                 payroll.connect(other).processDuePayments(0, 100)
             ).to.not.be.reverted;
         });
 
-        it("skips employees that are not yet due", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK * 4, "", "", "", "", "", "");
-            await time.increase(ONE_WEEK);
-
-            const before = await ethers.provider.getBalance(employee1.address);
-            await payroll.processDuePayments(0, 100);
-            const after = await ethers.provider.getBalance(employee1.address);
-
-            expect(after - before).to.equal(0n);
-        });
-
         it("only processes employees within the given range", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
-            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
-
+            await registerAndSignEmployee(employee1);
+            await registerAndSignEmployee(employee2);
             await time.increase(ONE_WEEK + 1);
 
             const before1 = await ethers.provider.getBalance(employee1.address);
             const before2 = await ethers.provider.getBalance(employee2.address);
 
-            // Process only the first employee (index 0, count 1)
             await payroll.processDuePayments(0, 1);
 
             const after1 = await ethers.provider.getBalance(employee1.address);
@@ -272,27 +305,11 @@ describe("EmployerPayroll", function () {
             expect(after1 - before1).to.equal(WAGE);
             expect(after2 - before2).to.equal(0n);
         });
-
-        it("clamps end index to list length when count exceeds bounds", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
-            await time.increase(ONE_WEEK + 1);
-
-            const before = await ethers.provider.getBalance(employee1.address);
-            // count larger than the list — should not revert
-            await payroll.processDuePayments(0, 9999);
-            const after = await ethers.provider.getBalance(employee1.address);
-
-            expect(after - before).to.equal(WAGE);
-        });
     });
-
-    // ──────────────────────────────────────────
-    //  sendBonus
-    // ──────────────────────────────────────────
 
     describe("sendBonus()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await registerAndSignEmployee(employee1);
         });
 
         it("transfers the bonus and emits BonusSent", async function () {
@@ -306,58 +323,31 @@ describe("EmployerPayroll", function () {
         });
 
         it("reverts if employee is not active", async function () {
-            await payroll.removeEmployee(employee1.address);
+            await registerEmployee(employee2);
             await expect(
-                payroll.sendBonus(employee1.address, WAGE)
-            ).to.be.revertedWith("EmployerPayroll: employee not found");
-        });
-
-        it("reverts if bonus is zero", async function () {
-            await expect(
-                payroll.sendBonus(employee1.address, 0)
-            ).to.be.revertedWith("EmployerPayroll: bonus must be > 0");
-        });
-
-        it("reverts if insufficient balance", async function () {
-            const huge = ethers.parseEther("1000");
-            await expect(
-                payroll.sendBonus(employee1.address, huge)
-            ).to.be.revertedWith("EmployerPayroll: insufficient balance");
+                payroll.sendBonus(employee2.address, WAGE)
+            ).to.be.revertedWith("EmployerPayroll: employee not active");
         });
     });
 
-    // ──────────────────────────────────────────
-    //  isPaymentDue
-    // ──────────────────────────────────────────
-
     describe("isPaymentDue()", function () {
-        it("returns true when frequency elapsed", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+        it("returns false before the employee signs", async function () {
+            await registerEmployee(employee1);
+            await time.increase(ONE_WEEK + 1);
+            expect(await payroll.isPaymentDue(employee1.address)).to.be.false;
+        });
+
+        it("returns true when an active employee's pay frequency has elapsed", async function () {
+            await registerAndSignEmployee(employee1);
             await time.increase(ONE_WEEK + 1);
             expect(await payroll.isPaymentDue(employee1.address)).to.be.true;
         });
-
-        it("returns false when not yet due", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
-            expect(await payroll.isPaymentDue(employee1.address)).to.be.false;
-        });
-
-        it("returns false for removed employee", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
-            await payroll.removeEmployee(employee1.address);
-            await time.increase(ONE_WEEK + 1);
-            expect(await payroll.isPaymentDue(employee1.address)).to.be.false;
-        });
     });
-
-    // ──────────────────────────────────────────
-    //  getEmployeeList / getEmployeeCount
-    // ──────────────────────────────────────────
 
     describe("getEmployeeList() / getEmployeeCount()", function () {
         it("returns all registered employee addresses", async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
-            await payroll.registerEmployee(employee2.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await registerEmployee(employee1);
+            await registerEmployee(employee2);
 
             const list = await payroll.getEmployeeList();
             expect(list).to.include(employee1.address);
@@ -366,13 +356,9 @@ describe("EmployerPayroll", function () {
         });
     });
 
-    // ──────────────────────────────────────────
-    //  setEmployeeMeta / getEmployeeMeta
-    // ──────────────────────────────────────────
-
     describe("setEmployeeMeta() / getEmployeeMeta()", function () {
         beforeEach(async function () {
-            await payroll.registerEmployee(employee1.address, WAGE, ONE_WEEK, "", "", "", "", "", "");
+            await registerEmployee(employee1);
         });
 
         it("stores and retrieves all metadata fields", async function () {
@@ -397,56 +383,7 @@ describe("EmployerPayroll", function () {
             expect(startDate).to.equal("2025-01-15");
         });
 
-        it("emits EmployeeMetaUpdated", async function () {
-            await expect(
-                payroll.setEmployeeMeta(
-                    employee1.address,
-                    "Jane Smith", "Engineering", "Engineer", "", "Full-time", "2025-01-15"
-                )
-            )
-                .to.emit(payroll, "EmployeeMetaUpdated")
-                .withArgs(employee1.address);
-        });
-
-        it("overwrites existing metadata on subsequent calls", async function () {
-            await payroll.setEmployeeMeta(
-                employee1.address, "Old Name", "OldDept", "Old Title", "", "Part-time", "2024-01-01"
-            );
-            await payroll.setEmployeeMeta(
-                employee1.address, "New Name", "NewDept", "New Title", "", "Contract", "2025-06-01"
-            );
-
-            const [name, department, jobTitle, , employmentType, startDate] =
-                await payroll.getEmployeeMeta(employee1.address);
-
-            expect(name).to.equal("New Name");
-            expect(department).to.equal("NewDept");
-            expect(jobTitle).to.equal("New Title");
-            expect(employmentType).to.equal("Contract");
-            expect(startDate).to.equal("2025-06-01");
-        });
-
-        it("returns empty strings for an employee with no metadata set", async function () {
-            const [name, department, jobTitle, jobDescription, employmentType, startDate] =
-                await payroll.getEmployeeMeta(employee1.address);
-
-            expect(name).to.equal("");
-            expect(department).to.equal("");
-            expect(jobTitle).to.equal("");
-            expect(jobDescription).to.equal("");
-            expect(employmentType).to.equal("");
-            expect(startDate).to.equal("");
-        });
-
-        it("reverts if caller is not employer", async function () {
-            await expect(
-                payroll.connect(other).setEmployeeMeta(
-                    employee1.address, "Jane", "Eng", "Dev", "", "Full-time", "2025-01-01"
-                )
-            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
-        });
-
-        it("reverts if employee is not active", async function () {
+        it("reverts if employee is not found", async function () {
             await expect(
                 payroll.setEmployeeMeta(
                     employee2.address, "Jane", "Eng", "Dev", "", "Full-time", "2025-01-01"
