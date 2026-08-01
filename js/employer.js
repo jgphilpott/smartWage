@@ -95,7 +95,7 @@ async function renderEmployeeTable(addresses) {
     tbody.innerHTML = "";
 
     if (addresses.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No employees registered yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No employees registered yet.</td></tr>`;
         return;
     }
 
@@ -115,12 +115,12 @@ async function renderEmployeeTable(addresses) {
     })).filter(({ agreement }) => agreement.employeeContract && !agreement.removed);
 
     if (entries.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No current employees. Register one below.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No current employees. Register one below.</td></tr>`;
         return;
     }
 
     entries.forEach(({ addr, data, agreement, meta, isDue }) => {
-        const [, wageWei, payFrequency, lastPaid] = data;
+        const [, wageWei, payFrequency] = data;
         const displayName = meta.name || "—";
         const displayRole = [meta.jobTitle, meta.department].filter(Boolean).join(" · ");
 
@@ -132,8 +132,8 @@ async function renderEmployeeTable(addresses) {
         }
 
         const contractLabel = shortAddress(agreement.employeeContract);
+        const walletLabel = shortAddress(addr);
         const actionButtons = [
-            `<button class="btn btn-sm btn-ghost" onclick="copyAddressToClipboard('${agreement.employeeContract}')">Copy Contract</button>`,
             agreement.active ? `<button class="btn btn-sm btn-primary" onclick="handlePayEmployee('${addr}')">Pay</button>` : "",
             agreement.active ? `<button class="btn btn-sm btn-ghost" onclick="openBonusModal('${addr}')">Bonus</button>` : "",
             `<button class="btn btn-sm btn-ghost" onclick="openEditModal('${addr}', '${wageWei}', '${payFrequency}')">Edit</button>`,
@@ -146,13 +146,12 @@ async function renderEmployeeTable(addresses) {
                 <div style="font-weight:600">${displayName}</div>
                 ${displayRole ? `<div style="font-size:.8rem;color:var(--text-muted)">${displayRole}</div>` : ""}
             </td>
-            <td><span class="truncate" title="${addr}">${addr}</span></td>
-            <td><span class="truncate" title="${agreement.employeeContract}">${contractLabel}</span></td>
+            <td><span class="wallet-address wallet-address-clickable" title="Click to copy" onclick="copyAddressToClipboard('${addr}')">${walletLabel}</span></td>
+            <td><span class="wallet-address wallet-address-clickable" title="Click to copy" onclick="copyAddressToClipboard('${agreement.employeeContract}')">${contractLabel}</span></td>
             <td>${formatWei(wageWei)}</td>
             <td>${formatFrequency(payFrequency)}</td>
             <td><span class="${statusClass}">${statusText}</span></td>
-            <td>${formatTimestamp(lastPaid)}</td>
-            <td class="flex-row">${actionButtons}</td>
+            <td><div class="flex-row">${actionButtons}</div></td>
         `;
         tbody.appendChild(tr);
     });
