@@ -14,12 +14,14 @@ const STORAGE_KEY = "smartwage_employee_contract";
 async function loadArtifacts() {
     if (EMPLOYEE_ABI.length > 0) return;
 
-    const [employeeArtifact, employerArtifact] = await Promise.all([
-        fetch("../abis/EmployeePortal.json").then((res) => res.json()),
-        fetch("../abis/EmployerPayroll.json").then((res) => res.json())
-    ]);
-
+    const employeeArtifact = await fetch("../abis/EmployeePortal.json").then((res) => res.json());
     EMPLOYEE_ABI = employeeArtifact.abi || employeeArtifact;
+}
+
+async function ensureEmployerEventAbiLoaded() {
+    if (EMPLOYER_EVENT_ABI.length > 0) return;
+
+    const employerArtifact = await fetch("../abis/EmployerPayroll.json").then((res) => res.json());
     const employerAbi = employerArtifact.abi || employerArtifact;
     EMPLOYER_EVENT_ABI = employerAbi.filter((entry) =>
         entry.type === "event" || ["employer", "PaymentSent", "BonusSent"].includes(entry.name)
@@ -91,7 +93,7 @@ function renderAgreementDetails(details, meta, payrollAddr) {
         ["Pay frequency", formatFrequency(payFrequency)],
         ["Last paid", formatTimestamp(lastPaid)],
         ["Payroll contract", payrollAddr],
-        ["Payroll status", active ? "Active" : "Pending employee signature"],
+        ["Payroll status", active ? "Active" : "Inactive"],
         ["Job description", jobDescription || "—"]
     ];
 
@@ -112,6 +114,7 @@ async function viewPayHistory() {
     historyBody.innerHTML = `<tr><td colspan="3" class="empty-state">Loading…</td></tr>`;
 
     try {
+        await ensureEmployerEventAbiLoaded();
         const employerPayroll = new ethers.Contract(linkedPayrollAddress, EMPLOYER_EVENT_ABI, provider);
         const latest = await provider.getBlockNumber();
         const fromBlock = Math.max(0, latest - 200_000);

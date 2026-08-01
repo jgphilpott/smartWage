@@ -160,6 +160,14 @@ describe("EmployerPayroll", function () {
                 portal.connect(other).signContract()
             ).to.be.revertedWith("EmployeePortal: caller is not the employee");
         });
+
+        it("reverts when activateEmployeeFromPortal is called by a non-portal address", async function () {
+            await registerEmployee(employee1);
+
+            await expect(
+                payroll.connect(other).activateEmployeeFromPortal(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: caller is not employee contract");
+        });
     });
 
     describe("updateEmployee()", function () {
