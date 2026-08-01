@@ -386,7 +386,7 @@ tr:hover td {
 .hero h1 {
     font-size: 2.5rem;
     font-weight: 800;
-    margin-bottom: 0.75rem;
+    margin-bottom: 2rem;
     background: linear-gradient(135deg, var(--accent), var(--accent-success));
     background-clip: text;
     -webkit-background-clip: text;
@@ -396,8 +396,12 @@ tr:hover td {
 .hero p {
     font-size: 1.1rem;
     color: var(--text-muted);
-    max-width: 540px;
-    margin: 0 auto 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#connect-btn-hero {
+    margin: 4rem;
 }
 
 .wallet-status {
