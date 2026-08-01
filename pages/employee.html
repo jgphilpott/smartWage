@@ -26,11 +26,11 @@
 
             <div id="setup-section">
                 <div class="alert alert-info">
-                    Connect your wallet, then enter the employee contract address your employer shared with you.
+                    Connect your wallet, then enter the employee contract address shared by your employer.
                 </div>
 
                 <div class="card mt-2">
-                    <h2>Connect to Your Employee Contract</h2>
+                    <h2>Connect to your Employee Contract</h2>
                     <form id="connect-portal-form">
                         <div class="form-group">
                             <label for="portal-addr-input">Employee contract address</label>
@@ -38,6 +38,23 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Connect</button>
                     </form>
+                </div>
+
+                <div class="card mt-2">
+                    <h2>Don't Have a Contract Address Yet?</h2>
+                    <p class="muted-sm">
+                        Employee contracts on smartWage are created by your employer.
+                        Once your employer registers you (using your wallet address), a dedicated
+                        <code>EmployeePortal</code> contract is automatically deployed for you.
+                    </p>
+                    <p class="muted-sm mt-2">
+                        Ask your employer for your contract address — it's shown next to
+                        your name in their "Active Employees" table — and paste it above to connect.
+                    </p>
+                    <p class="muted-xs mt-2">
+                        The contract source is at
+                        <a href="https://github.com/jgphilpott/smartWage/blob/main/contracts/employee/EmployeePortal.sol" target="_blank" rel="noopener noreferrer"><code>contracts/employee/EmployeePortal.sol</code></a> in this repository.
+                    </p>
                 </div>
             </div>
 
