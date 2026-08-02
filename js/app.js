@@ -16,6 +16,21 @@ const NETWORKS = {
     31337: "Localhost / Hardhat",
 };
 
+// Block explorer "tx" URL templates, keyed by chainId. Networks without a
+// public explorer (e.g. local Hardhat) are intentionally omitted.
+const EXPLORER_TX_URLS = {
+    1: "https://etherscan.io/tx/",
+    5: "https://goerli.etherscan.io/tx/",
+    11155111: "https://sepolia.etherscan.io/tx/",
+    137: "https://polygonscan.com/tx/",
+    80001: "https://mumbai.polygonscan.com/tx/",
+};
+
+function getExplorerTxUrl(chainId, txHash) {
+    const base = EXPLORER_TX_URLS[Number(chainId)];
+    return base ? `${base}${txHash}` : null;
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Module state
 // ─────────────────────────────────────────────────────────────

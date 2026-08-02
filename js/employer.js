@@ -161,11 +161,12 @@ async function loadFundsHistory() {
     const tbody = document.getElementById("funds-history-tbody");
     if (!tbody || !payrollContract) return;
 
-    tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Loading…</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Loading…</td></tr>`;
 
     try {
         const latest = await provider.getBlockNumber();
         const fromBlock = Math.max(0, latest - 200_000);
+        const { chainId } = await provider.getNetwork();
 
         const [depositEvents, paymentEvents, bonusEvents] = await Promise.all([
             payrollContract.queryFilter(payrollContract.filters.FundsDeposited(), fromBlock, latest),
@@ -174,13 +175,13 @@ async function loadFundsHistory() {
         ]);
 
         const allEvents = [
-            ...depositEvents.map((event) => ({ type: "Deposit", addr: event.args.from, amount: event.args.amount, block: event.blockNumber })),
-            ...paymentEvents.map((event) => ({ type: "Payment", addr: event.args.employee, amount: event.args.amount, block: event.blockNumber })),
-            ...bonusEvents.map((event) => ({ type: "Bonus", addr: event.args.employee, amount: event.args.amount, block: event.blockNumber }))
+            ...depositEvents.map((event) => ({ type: "Deposit", addr: event.args.from, amount: event.args.amount, block: event.blockNumber, txHash: event.transactionHash })),
+            ...paymentEvents.map((event) => ({ type: "Payment", addr: event.args.employee, amount: event.args.amount, block: event.blockNumber, txHash: event.transactionHash })),
+            ...bonusEvents.map((event) => ({ type: "Bonus", addr: event.args.employee, amount: event.args.amount, block: event.blockNumber, txHash: event.transactionHash }))
         ].sort((a, b) => b.block - a.block);
 
         if (allEvents.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No funds activity found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No funds activity found.</td></tr>`;
             return;
         }
 
@@ -188,17 +189,24 @@ async function loadFundsHistory() {
         const blocks = await Promise.all(blockNumbers.map((blockNumber) => provider.getBlock(blockNumber)));
         const tsByBlock = Object.fromEntries(blocks.map((block) => [block.number, block.timestamp]));
 
-        tbody.innerHTML = allEvents.map((event) => `
+        tbody.innerHTML = allEvents.map((event) => {
+            const explorerUrl = getExplorerTxUrl(chainId, event.txHash);
+            const txCell = explorerUrl
+                ? `<a href="${explorerUrl}" target="_blank" rel="noopener noreferrer" class="truncate">${shortAddress(event.txHash)}</a>`
+                : `<span class="truncate copyable-text" title="Click to copy" onclick="copyAddressToClipboard('${event.txHash}')">${shortAddress(event.txHash)}</span>`;
+            return `
             <tr>
                 <td><span class="badge ${event.type === "Deposit" ? "badge-success" : "badge-danger"}">${event.type === "Deposit" ? "↓ Deposit" : `↑ ${event.type}`}</span></td>
-                <td><span class="truncate" title="${event.addr}">${shortAddress(event.addr)}</span></td>
+                <td><span class="truncate copyable-text" title="Click to copy" onclick="copyAddressToClipboard('${event.addr}')">${shortAddress(event.addr)}</span></td>
                 <td>${formatWei(event.amount)}</td>
+                <td>${txCell}</td>
                 <td>${formatTimestamp(tsByBlock[event.block])}</td>
             </tr>
-        `).join("");
+        `;
+        }).join("");
     } catch (err) {
         console.error("loadFundsHistory failed:", err);
-        tbody.innerHTML = `<tr><td colspan="4" style="color:var(--accent-danger)">Error loading funds activity: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--accent-danger)">Error loading funds activity: ${err.message}</td></tr>`;
     }
 }
 
@@ -418,10 +426,17 @@ async function handleUpdateEmployee(e) {
 
 let bonusTarget = null;
 
-function openBonusModal(addr) {
+async function openBonusModal(addr) {
     bonusTarget = addr;
     document.getElementById("bonus-addr-display").textContent = shortAddress(addr);
     document.getElementById("bonus-modal").style.display = "flex";
+
+    try {
+        const meta = await getEmployeeMeta(addr);
+        document.getElementById("bonus-addr-display").textContent = meta.name || shortAddress(addr);
+    } catch {
+        // Keep the short address fallback already set above.
+    }
 }
 
 function closeBonusModal() {
