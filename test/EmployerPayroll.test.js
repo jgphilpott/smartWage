@@ -338,6 +338,48 @@ describe("EmployerPayroll", function () {
         });
     });
 
+    describe("processDuePaymentFor()", function () {
+        it("can be called by anyone", async function () {
+            await registerAndSignEmployee(employee1);
+            await time.increase(ONE_WEEK + 1);
+            await expect(
+                payroll.connect(other).processDuePaymentFor(employee1.address)
+            ).to.not.be.reverted;
+        });
+
+        it("pays the targeted employee's full accrued cycles when funded", async function () {
+            const ONE_MINUTE = 60;
+            const wage = ethers.parseEther("0.1");
+            await registerAndSignEmployee(employee1, wage, ONE_MINUTE);
+            await time.increase((10 * ONE_MINUTE) + 1);
+
+            const before = await ethers.provider.getBalance(employee1.address);
+            await payroll.connect(other).processDuePaymentFor(employee1.address);
+            const after = await ethers.provider.getBalance(employee1.address);
+
+            expect(after - before).to.equal(ethers.parseEther("1"));
+        });
+
+        it("isolates targeted payouts from list-order competition", async function () {
+            const ONE_MINUTE = 60;
+            const wage = ethers.parseEther("0.1");
+            await registerAndSignEmployee(employee1, wage, ONE_MINUTE);
+            await registerAndSignEmployee(employee2, wage, ONE_MINUTE);
+            await time.increase((10 * ONE_MINUTE) + 1);
+
+            const before1 = await ethers.provider.getBalance(employee1.address);
+            const before2 = await ethers.provider.getBalance(employee2.address);
+
+            await payroll.connect(other).processDuePaymentFor(employee2.address);
+
+            const after1 = await ethers.provider.getBalance(employee1.address);
+            const after2 = await ethers.provider.getBalance(employee2.address);
+
+            expect(after1 - before1).to.equal(0n);
+            expect(after2 - before2).to.equal(ethers.parseEther("1"));
+        });
+    });
+
     describe("sendBonus()", function () {
         beforeEach(async function () {
             await registerAndSignEmployee(employee1);

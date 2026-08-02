@@ -11,7 +11,6 @@ let portalContract = null;
 let portalAddress = null;
 let linkedPayrollAddress = null;
 const STORAGE_KEY = "smartwage_employee_contract";
-const MAX_UINT256 = (1n << 256n) - 1n;
 let paymentSnapshot = null;
 let paymentTicker = null;
 
@@ -289,7 +288,7 @@ async function handleProcessDuePayments() {
         await ensureEmployerEventAbiLoaded();
         const [, , , lastPaidBefore] = await portalContract.getContractDetails();
         const payroll = new ethers.Contract(linkedPayrollAddress, EMPLOYER_PAYROLL_ABI, signer);
-        const tx = await payroll.processDuePayments(0, MAX_UINT256);
+        const tx = await payroll.processDuePaymentFor(userAddress);
         const receipt = await tx.wait();
         const iface = new ethers.Interface(EMPLOYER_PAYROLL_ABI);
         let paidWei = 0n;

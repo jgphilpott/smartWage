@@ -278,23 +278,22 @@ contract EmployerPayroll {
         if (end > len) end = len;
         for (uint256 i = start; i < end; ) {
             Employee storage emp = _employees[_employeeList[i]];
-            if (emp.active) {
-                uint256 dueCycles = _dueCycles(emp);
-                uint256 affordableCycles = address(this).balance / emp.wageWei;
-                uint256 cyclesToPay = dueCycles < affordableCycles ? dueCycles : affordableCycles;
-                if (cyclesToPay > 0) {
-                    uint256 payout = cyclesToPay * emp.wageWei;
-                    uint256 prevLastPaid = emp.lastPaid;
-                    emp.lastPaid = prevLastPaid + (cyclesToPay * emp.payFrequency);
-                    (bool ok, ) = payable(emp.addr).call{value: payout}("");
-                    if (ok) {
-                        emit PaymentSent(emp.addr, payout, block.timestamp);
-                    } else {
-                        emp.lastPaid = prevLastPaid;
-                    }
-                }
+            if (emp.active && !_employeeRemoved[emp.addr]) {
+                _processEmployeeDuePayment(emp);
             }
             unchecked { ++i; }
+        }
+    }
+
+    /**
+     * @notice Process overdue scheduled payments for one employee.
+     *         Can be called by anyone (employee, employer, keeper, cron bot, etc.).
+     * @param addr Employee wallet address.
+     */
+    function processDuePaymentFor(address addr) external {
+        Employee storage emp = _employees[addr];
+        if (emp.active && !_employeeRemoved[addr]) {
+            _processEmployeeDuePayment(emp);
         }
     }
 
@@ -459,6 +458,23 @@ contract EmployerPayroll {
     function _dueCycles(Employee storage emp) internal view returns (uint256) {
         if (block.timestamp <= emp.lastPaid) return 0;
         return (block.timestamp - emp.lastPaid) / emp.payFrequency;
+    }
+
+    function _processEmployeeDuePayment(Employee storage emp) internal {
+        uint256 dueCycles = _dueCycles(emp);
+        uint256 affordableCycles = address(this).balance / emp.wageWei;
+        uint256 cyclesToPay = dueCycles < affordableCycles ? dueCycles : affordableCycles;
+        if (cyclesToPay == 0) return;
+
+        uint256 payout = cyclesToPay * emp.wageWei;
+        uint256 prevLastPaid = emp.lastPaid;
+        emp.lastPaid = prevLastPaid + (cyclesToPay * emp.payFrequency);
+        (bool ok, ) = payable(emp.addr).call{value: payout}("");
+        if (ok) {
+            emit PaymentSent(emp.addr, payout, block.timestamp);
+        } else {
+            emp.lastPaid = prevLastPaid;
+        }
     }
 
     function _requireCurrentEmployee(address addr) internal view {
