@@ -281,6 +281,18 @@ describe("EmployerPayroll", function () {
             expect(after2 - before2).to.equal(0n);
         });
 
+        it("pays all elapsed cycles when payments were missed", async function () {
+            const ONE_MINUTE = 60;
+            await registerAndSignEmployee(employee1, WAGE, ONE_MINUTE);
+            await time.increase((10 * ONE_MINUTE) + 1);
+
+            const before = await ethers.provider.getBalance(employee1.address);
+            await payroll.processDuePayments(0, 100);
+            const after = await ethers.provider.getBalance(employee1.address);
+
+            expect(after - before).to.equal(WAGE * 10n);
+        });
+
         it("can be called by anyone", async function () {
             await registerAndSignEmployee(employee1);
             await time.increase(ONE_WEEK + 1);
@@ -304,6 +316,25 @@ describe("EmployerPayroll", function () {
 
             expect(after1 - before1).to.equal(WAGE);
             expect(after2 - before2).to.equal(0n);
+        });
+
+        it("partially catches up and preserves unpaid cycles when underfunded", async function () {
+            const ONE_MINUTE = 60;
+            const highWage = ethers.parseEther("0.2");
+            await registerAndSignEmployee(employee1, highWage, ONE_MINUTE);
+            await time.increase((10 * ONE_MINUTE) + 1);
+
+            const [, , payFrequency, initialLastPaid] = await payroll.getEmployee(employee1.address);
+            const before = await ethers.provider.getBalance(employee1.address);
+
+            await payroll.processDuePayments(0, 100);
+
+            const after = await ethers.provider.getBalance(employee1.address);
+            const [, , , updatedLastPaid] = await payroll.getEmployee(employee1.address);
+
+            expect(after - before).to.equal(ethers.parseEther("1"));
+            expect(updatedLastPaid - initialLastPaid).to.equal(payFrequency * 5n);
+            expect(await payroll.isPaymentDue(employee1.address)).to.be.true;
         });
     });
 

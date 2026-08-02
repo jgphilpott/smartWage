@@ -459,6 +459,21 @@ tr:hover td {
     border-color: var(--accent);
 }
 
+.topbar-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.8rem;
+}
+
+.topbar-chip-label {
+    color: var(--text-muted);
+}
+
 /* Subtle click-to-copy affordance for addresses/hashes embedded in plain
    text (e.g. table cells) — just a cursor + colour change, no chip styling. */
 .copyable-text {

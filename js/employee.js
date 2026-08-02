@@ -5,27 +5,115 @@
 
 let EMPLOYEE_ABI = [];
 let EMPLOYER_EVENT_ABI = [];
+let EMPLOYER_PAYROLL_ABI = [];
 
 let portalContract = null;
 let portalAddress = null;
 let linkedPayrollAddress = null;
 const STORAGE_KEY = "smartwage_employee_contract";
+const MAX_UINT256 = (1n << 256n) - 1n;
+let paymentSnapshot = null;
+let paymentTicker = null;
 
 async function loadArtifacts() {
-    if (EMPLOYEE_ABI.length > 0) return;
+    if (EMPLOYEE_ABI.length > 0 && EMPLOYER_PAYROLL_ABI.length > 0) return;
 
-    const employeeArtifact = await fetch("../abis/EmployeePortal.json").then((res) => res.json());
+    const [employeeArtifact, employerArtifact] = await Promise.all([
+        fetch("../abis/EmployeePortal.json").then((res) => res.json()),
+        fetch("../abis/EmployerPayroll.json").then((res) => res.json())
+    ]);
     EMPLOYEE_ABI = employeeArtifact.abi || employeeArtifact;
-}
 
-async function ensureEmployerEventAbiLoaded() {
-    if (EMPLOYER_EVENT_ABI.length > 0) return;
-
-    const employerArtifact = await fetch("../abis/EmployerPayroll.json").then((res) => res.json());
     const employerAbi = employerArtifact.abi || employerArtifact;
+    EMPLOYER_PAYROLL_ABI = employerAbi;
     EMPLOYER_EVENT_ABI = employerAbi.filter((entry) =>
         entry.type === "event" || ["employer", "PaymentSent", "BonusSent"].includes(entry.name)
     );
+}
+
+async function ensureEmployerEventAbiLoaded() {
+    if (EMPLOYER_EVENT_ABI.length > 0 && EMPLOYER_PAYROLL_ABI.length > 0) return;
+    await loadArtifacts();
+}
+
+function formatDuration(secondsInput) {
+    let seconds = BigInt(secondsInput);
+    if (seconds < 0n) seconds = 0n;
+
+    const days = seconds / 86400n;
+    seconds %= 86400n;
+    const hours = seconds / 3600n;
+    seconds %= 3600n;
+    const minutes = seconds / 60n;
+    const secs = seconds % 60n;
+
+    if (days > 0n) return `${days}d ${hours}h ${minutes}m ${secs}s`;
+    if (hours > 0n) return `${hours}h ${minutes}m ${secs}s`;
+    if (minutes > 0n) return `${minutes}m ${secs}s`;
+    return `${secs}s`;
+}
+
+function stopPaymentTicker() {
+    if (paymentTicker) {
+        clearInterval(paymentTicker);
+        paymentTicker = null;
+    }
+}
+
+function hidePaymentChips() {
+    const accruedChip = document.getElementById("accrued-balance-chip");
+    const nextPaymentChip = document.getElementById("next-payment-chip");
+    if (accruedChip) accruedChip.style.display = "none";
+    if (nextPaymentChip) nextPaymentChip.style.display = "none";
+}
+
+function updatePaymentChips() {
+    const accruedChip = document.getElementById("accrued-balance-chip");
+    const nextPaymentChip = document.getElementById("next-payment-chip");
+    const accruedValue = document.getElementById("accrued-balance-value");
+    const nextPaymentValue = document.getElementById("next-payment-value");
+    if (!accruedChip || !nextPaymentChip || !accruedValue || !nextPaymentValue) return;
+
+    if (!paymentSnapshot) {
+        hidePaymentChips();
+        return;
+    }
+
+    accruedChip.style.display = "inline-flex";
+    nextPaymentChip.style.display = "inline-flex";
+
+    if (!paymentSnapshot.active) {
+        accruedValue.textContent = "0 ETH";
+        nextPaymentValue.textContent = "Pending activation";
+        return;
+    }
+
+    const now = BigInt(Math.floor(Date.now() / 1000));
+    const elapsed = now > paymentSnapshot.lastPaid ? now - paymentSnapshot.lastPaid : 0n;
+    const dueCycles = elapsed / paymentSnapshot.payFrequency;
+    const accruedWei = paymentSnapshot.wageWei * dueCycles;
+    accruedValue.textContent = formatWei(accruedWei);
+
+    if (dueCycles > 0n) {
+        nextPaymentValue.textContent = "Due now";
+        return;
+    }
+
+    nextPaymentValue.textContent = formatDuration(paymentSnapshot.payFrequency - elapsed);
+}
+
+function setPaymentSnapshot(details) {
+    const [, wageWei, payFrequency, lastPaid, active] = details;
+    paymentSnapshot = {
+        wageWei: BigInt(wageWei),
+        payFrequency: BigInt(payFrequency),
+        lastPaid: BigInt(lastPaid),
+        active
+    };
+    updatePaymentChips();
+
+    stopPaymentTicker();
+    paymentTicker = setInterval(updatePaymentChips, 1000);
 }
 
 async function refreshDashboard() {
@@ -67,8 +155,11 @@ async function refreshDashboard() {
 
         const signBtn = document.getElementById("sign-contract-btn");
         signBtn.style.display = contractSigned ? "none" : "inline-flex";
+        const processDueBtn = document.getElementById("process-due-btn");
+        processDueBtn.disabled = !(contractSigned && active);
 
         renderAgreementDetails(details, meta, payrollAddr);
+        setPaymentSnapshot(details);
     } catch (err) {
         console.error("refreshDashboard failed:", err);
         showToast("Failed to load agreement: " + err.message, "error");
@@ -173,6 +264,22 @@ async function handleSignContract() {
     }
 }
 
+async function handleProcessDuePayments() {
+    if (!linkedPayrollAddress) return;
+
+    try {
+        showToast("Processing due payments…", "info");
+        await ensureEmployerEventAbiLoaded();
+        const payroll = new ethers.Contract(linkedPayrollAddress, EMPLOYER_PAYROLL_ABI, signer);
+        const tx = await payroll.processDuePayments(0, MAX_UINT256);
+        await tx.wait();
+        showToast("Due payments processed.", "success");
+        await refreshDashboard();
+    } catch (err) {
+        showToast(err.reason || err.message, "error");
+    }
+}
+
 async function connectToPortal(address) {
     if (!ethers.isAddress(address)) {
         showToast("Could not connect: that doesn't look like a valid address.", "error");
@@ -217,6 +324,9 @@ function showSetup() {
     portalContract = null;
     portalAddress = null;
     linkedPayrollAddress = null;
+    paymentSnapshot = null;
+    stopPaymentTicker();
+    hidePaymentChips();
 }
 
 async function onWalletReady() {
@@ -234,6 +344,7 @@ async function onWalletReady() {
     });
 
     document.getElementById("sign-contract-btn").addEventListener("click", handleSignContract);
+    document.getElementById("process-due-btn").addEventListener("click", handleProcessDuePayments);
     document.getElementById("view-history-btn").addEventListener("click", viewPayHistory);
     document.getElementById("disconnect-btn").addEventListener("click", showSetup);
     document.getElementById("refresh-btn").addEventListener("click", refreshDashboard);
