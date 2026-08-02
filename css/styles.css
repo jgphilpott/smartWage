@@ -459,6 +459,17 @@ tr:hover td {
     border-color: var(--accent);
 }
 
+/* Subtle click-to-copy affordance for addresses/hashes embedded in plain
+   text (e.g. table cells) — just a cursor + colour change, no chip styling. */
+.copyable-text {
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.copyable-text:hover {
+    color: var(--accent);
+}
+
 /* ── Contract type cards ─────────────────────── */
 
 .contract-grid {
@@ -590,6 +601,7 @@ tr:hover td {
 .modal h3 { margin-bottom: 1rem; }
 
 .modal .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1rem; }
+.modal .modal-footer.modal-footer-split { justify-content: space-between; }
 
 .modal.modal-lg { max-width: 720px; }
 

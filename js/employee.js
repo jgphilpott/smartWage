@@ -82,8 +82,11 @@ function renderAgreementDetails(details, meta, payrollAddr) {
     const [employeeAddr, wageWei, payFrequency, lastPaid, active] = details;
     const [name, department, jobTitle, jobDescription, employmentType, startDate] = meta;
 
+    const walletValue = employeeAddr || userAddress;
+    const copyable = (addr) => `<span class="copyable-text" title="Click to copy" onclick="copyAddressToClipboard('${addr}')">${addr}</span>`;
+
     const rows = [
-        ["Employee wallet", employeeAddr || userAddress],
+        ["Employee wallet", copyable(walletValue)],
         ["Full name", name || "—"],
         ["Job title", jobTitle || "—"],
         ["Department", department || "—"],
@@ -92,7 +95,7 @@ function renderAgreementDetails(details, meta, payrollAddr) {
         ["Wage per cycle", formatWei(wageWei)],
         ["Pay frequency", formatFrequency(payFrequency)],
         ["Last paid", formatTimestamp(lastPaid)],
-        ["Payroll contract", payrollAddr],
+        ["Payroll contract", copyable(payrollAddr)],
         ["Payroll status", active ? "Active" : "Inactive"],
         ["Job description", jobDescription || "—"]
     ];

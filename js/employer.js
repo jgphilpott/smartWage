@@ -134,8 +134,8 @@ async function renderEmployeeTable(addresses) {
         const contractLabel = shortAddress(agreement.employeeContract);
         const walletLabel = shortAddress(addr);
         const actionButtons = [
-            agreement.active ? `<button class="btn btn-sm btn-primary" onclick="handlePayEmployee('${addr}')">Pay</button>` : "",
-            agreement.active ? `<button class="btn btn-sm btn-ghost" onclick="openBonusModal('${addr}')">Bonus</button>` : "",
+            agreement.active ? `<button class="btn btn-sm btn-success" onclick="handlePayEmployee('${addr}')">Pay</button>` : "",
+            agreement.active ? `<button class="btn btn-sm btn-primary" onclick="openBonusModal('${addr}')">Bonus</button>` : "",
             `<button class="btn btn-sm btn-ghost" onclick="openEditModal('${addr}', '${wageWei}', '${payFrequency}')">Edit</button>`,
             `<button class="btn btn-sm btn-danger" onclick="handleRemoveEmployee('${addr}')">Remove</button>`
         ].filter(Boolean).join("");
@@ -227,7 +227,13 @@ async function connectToContract(address) {
         }
 
         payrollContract = getContract(address);
-        await payrollContract.employer();
+        const linkedEmployer = await payrollContract.employer();
+        if (linkedEmployer.toLowerCase() !== userAddress.toLowerCase()) {
+            payrollContract = null;
+            showToast("This payroll contract belongs to a different wallet.", "error", 7000);
+            return;
+        }
+
         contractAddress = address;
         localStorage.setItem(STORAGE_KEY, address);
         showDashboard();
@@ -361,6 +367,7 @@ async function openEditModal(addr, wageWei, payFrequency) {
 
     try {
         const meta = await getEmployeeMeta(addr);
+        document.getElementById("edit-addr-display").textContent = meta.name || shortAddress(addr);
         document.getElementById("edit-name").value = meta.name || "";
         document.getElementById("edit-department").value = meta.department || "";
         document.getElementById("edit-job-title").value = meta.jobTitle || "";
