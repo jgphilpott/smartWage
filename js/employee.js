@@ -93,13 +93,10 @@ function updatePaymentChips() {
     const dueCycles = elapsed / paymentSnapshot.payFrequency;
     const accruedWei = paymentSnapshot.wageWei * dueCycles;
     accruedValue.textContent = formatWei(accruedWei);
-
-    if (dueCycles > 0n) {
-        nextPaymentValue.textContent = "Due now";
-        return;
-    }
-
-    nextPaymentValue.textContent = formatDuration(paymentSnapshot.payFrequency - elapsed);
+    const elapsedInCycle = elapsed % paymentSnapshot.payFrequency;
+    let remaining = paymentSnapshot.payFrequency - elapsedInCycle;
+    if (remaining === 0n) remaining = paymentSnapshot.payFrequency;
+    nextPaymentValue.textContent = formatDuration(remaining);
 }
 
 function setPaymentSnapshot(details) {
@@ -131,13 +128,13 @@ async function refreshDashboard() {
         linkedPayrollAddress = payrollAddr;
 
         const agreementDisplay = document.getElementById("agreement-address-display");
-        agreementDisplay.textContent = portalAddress;
-        agreementDisplay.title = "Click to copy";
+        agreementDisplay.textContent = shortAddress(portalAddress);
+        agreementDisplay.title = `${portalAddress} — Click to copy`;
         agreementDisplay.onclick = () => copyAddressToClipboard(portalAddress);
 
         const employerDisplay = document.getElementById("employer-addr-display");
-        employerDisplay.textContent = employerAddr;
-        employerDisplay.title = "Click to copy";
+        employerDisplay.textContent = shortAddress(employerAddr);
+        employerDisplay.title = `${employerAddr} — Click to copy`;
         employerDisplay.onclick = () => copyAddressToClipboard(employerAddr);
 
         const [contractSigned, active] = status;
@@ -206,13 +203,14 @@ async function viewPayHistory() {
 
     document.getElementById("agreement-card").style.display = "none";
     historyEl.style.display = "block";
-    historyBody.innerHTML = `<tr><td colspan="3" class="empty-state">Loading…</td></tr>`;
+    historyBody.innerHTML = `<tr><td colspan="5" class="empty-state">Loading…</td></tr>`;
 
     try {
         await ensureEmployerEventAbiLoaded();
         const employerPayroll = new ethers.Contract(linkedPayrollAddress, EMPLOYER_EVENT_ABI, provider);
         const latest = await provider.getBlockNumber();
         const fromBlock = Math.max(0, latest - 200_000);
+        const { chainId } = await provider.getNetwork();
 
         const [salaryEvents, bonusEvents] = await Promise.all([
             employerPayroll.queryFilter(employerPayroll.filters.PaymentSent(userAddress), fromBlock, latest),
@@ -222,33 +220,45 @@ async function viewPayHistory() {
         const allEvents = [
             ...salaryEvents.map((event) => ({
                 type: "Salary",
+                addr: event.args.employee,
                 amount: event.args.amount,
-                timestamp: event.args.timestamp,
-                block: event.blockNumber
+                block: event.blockNumber,
+                txHash: event.transactionHash
             })),
             ...bonusEvents.map((event) => ({
                 type: "Bonus",
+                addr: event.args.employee,
                 amount: event.args.amount,
-                timestamp: null,
-                block: event.blockNumber
+                block: event.blockNumber,
+                txHash: event.transactionHash
             }))
         ].sort((a, b) => b.block - a.block);
 
         if (allEvents.length === 0) {
-            historyBody.innerHTML = `<tr><td colspan="3" class="empty-state">No payment history found.</td></tr>`;
+            historyBody.innerHTML = `<tr><td colspan="5" class="empty-state">No payment history found.</td></tr>`;
             return;
         }
+
+        const blockNumbers = [...new Set(allEvents.map((event) => event.block))];
+        const blocks = await Promise.all(blockNumbers.map((blockNumber) => provider.getBlock(blockNumber)));
+        const tsByBlock = Object.fromEntries(blocks.map((block) => [block.number, block.timestamp]));
 
         historyBody.innerHTML = allEvents.map((event) => `
             <tr>
                 <td><span class="badge ${event.type === "Salary" ? "badge-success" : "badge-danger"}">${event.type}</span></td>
+                <td><span class="truncate copyable-text" title="Click to copy" onclick="copyAddressToClipboard('${event.addr}')">${shortAddress(event.addr)}</span></td>
                 <td>${formatWei(event.amount)}</td>
-                <td>${event.timestamp ? formatTimestamp(event.timestamp) : "(bonus)"}</td>
+                <td>${
+                    getExplorerTxUrl(chainId, event.txHash)
+                        ? `<a href="${getExplorerTxUrl(chainId, event.txHash)}" target="_blank" rel="noopener noreferrer" class="truncate">${shortAddress(event.txHash)}</a>`
+                        : `<span class="truncate copyable-text" title="Click to copy" onclick="copyAddressToClipboard('${event.txHash}')">${shortAddress(event.txHash)}</span>`
+                }</td>
+                <td>${formatTimestamp(tsByBlock[event.block])}</td>
             </tr>
         `).join("");
     } catch (err) {
         console.error("viewPayHistory failed:", err);
-        historyBody.innerHTML = `<tr><td colspan="3" style="color:var(--accent-danger)">Error loading history: ${err.message}</td></tr>`;
+        historyBody.innerHTML = `<tr><td colspan="5" style="color:var(--accent-danger)">Error loading history: ${err.message}</td></tr>`;
     }
 }
 
