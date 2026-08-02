@@ -20,7 +20,7 @@ Any revenue model must respect all three properties simultaneously:
 | **Permissionless** | Anyone can fork, self-host, or extend without asking permission |
 
 The key insight is that _the protocol_ can remain entirely free while _optional
-value-added services_ built on top of the protocol can be monetised.  This is the
+value-added services_ built on top of the protocol can be monetised. This is the
 same model used by Uniswap (open contracts, fee switch off by default), The Graph
 (open protocol, hosted service fees), and Infura (open spec, managed node fees).
 
@@ -31,9 +31,9 @@ same model used by Uniswap (open contracts, fee switch off by default), The Grap
 ### 1. ZK Proof-as-a-Service (highest potential)
 
 The ZK-STARK proof system described in [zk-starks.md](zk-starks.md) is the single
-most compelling commercial opportunity in the project.  Generating a STARK proof is
+most compelling commercial opportunity in the project. Generating a STARK proof is
 computationally intensive and is explicitly noted as "not feasible in-browser" for
-production use.  That creates a natural, legitimate gap between "use the protocol
+production use. That creates a natural, legitimate gap between "use the protocol
 for free" and "pay for managed proof generation."
 
 **How it works:**
@@ -57,8 +57,8 @@ for free" and "pay for managed proof generation."
 | Enterprise SLA | $1,000–5,000 / month | Large HR vendor or fintech |
 
 **Why this doesn't violate the open-source ethos:** the Cairo proof programs remain
-open source.  Any sophisticated user can run their own STARK prover (STWO,
-stone-prover) for free.  The hosted service is a convenience product, not a lock-in.
+open source. Any sophisticated user can run their own STARK prover (STWO,
+stone-prover) for free. The hosted service is a convenience product, not a lock-in.
 
 **Revenue path to $100K:**
 - 200 employer bundles at $50/month = $120K/year, OR
@@ -88,14 +88,14 @@ the _official_ frontend) is arguably the most "DeFi native" monetisation method.
   achievable once adoption reaches small-to-medium crypto-native teams.
 
 **Risk:** this slightly changes the value proposition for employers who compare costs
-against zero-fee self-deployment.  Transparency (publishing the fee prominently) and
+against zero-fee self-deployment. Transparency (publishing the fee prominently) and
 keeping the rate very low are essential.
 
 ---
 
 ### 3. Managed Keeper / Automation Service
 
-`processDuePayments` must be called by someone.  For small employers, setting up
+`processDuePayments` must be called by someone. For small employers, setting up
 their own cron job or keeper bot is a friction point.
 
 **How it works:**
