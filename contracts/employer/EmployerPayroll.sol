@@ -410,6 +410,7 @@ contract EmployerPayroll {
      */
     function setWageCommitment(address addr, bytes32 commitment) external onlyEmployer {
         _requireCurrentEmployee(addr);
+        require(uint256(commitment) >> 252 == 0, "EmployerPayroll: commitment exceeds felt252 range");
         _employees[addr].wageCommitment = commitment;
     }
 
@@ -421,6 +422,7 @@ contract EmployerPayroll {
      * @return The Poseidon commitment to the employee's wage.
      */
     function getWageCommitment(address addr) external view returns (bytes32) {
+        require(_employeeContracts[addr] != address(0), "EmployerPayroll: employee not registered");
         return _employees[addr].wageCommitment;
     }
 
