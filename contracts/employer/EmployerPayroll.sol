@@ -21,10 +21,11 @@ contract EmployerPayroll {
 
     struct Employee {
         address addr;
-        uint256 wageWei;       // amount paid each cycle (in wei)
-        uint256 payFrequency;  // seconds between payments (e.g. 604800 = weekly)
-        uint256 lastPaid;      // unix timestamp of last payment (0 = never)
+        uint256 wageWei;           // amount paid each cycle (in wei)
+        uint256 payFrequency;      // seconds between payments (e.g. 604800 = weekly)
+        uint256 lastPaid;          // unix timestamp of last payment (0 = never)
         bool    active;
+        bytes32 wageCommitment;    // Poseidon commitment to wageWei, used for ZK proofs
     }
 
     struct EmployeeMeta {
@@ -61,6 +62,15 @@ contract EmployerPayroll {
 
     modifier onlyEmployer() {
         require(msg.sender == employer, "EmployerPayroll: caller is not employer");
+        _;
+    }
+
+    /// @dev Grants access to the employer or the linked EmployeePortal contract for a given employee.
+    modifier onlyEmployerOrLinkedPortal(address addr) {
+        require(
+            msg.sender == employer || msg.sender == _employeeContracts[addr],
+            "EmployerPayroll: access denied"
+        );
         _;
     }
 
@@ -126,7 +136,8 @@ contract EmployerPayroll {
             wageWei: wageWei,
             payFrequency: payFrequency,
             lastPaid: 0,
-            active: false
+            active: false,
+            wageCommitment: bytes32(0)
         });
         _employeeContracts[addr] = employeeContract;
         _employeeList.push(addr);
@@ -308,6 +319,7 @@ contract EmployerPayroll {
     function getEmployee(address addr)
         external
         view
+        onlyEmployerOrLinkedPortal(addr)
         returns (
             address,
             uint256,
@@ -328,6 +340,7 @@ contract EmployerPayroll {
     function getEmployeeMeta(address addr)
         external
         view
+        onlyEmployerOrLinkedPortal(addr)
         returns (
             string memory,
             string memory,
@@ -345,6 +358,7 @@ contract EmployerPayroll {
     function getEmployeeAgreement(address addr)
         external
         view
+        onlyEmployerOrLinkedPortal(addr)
         returns (address employeeContract, bool active, bool removed)
     {
         employeeContract = _employeeContracts[addr];
@@ -353,29 +367,63 @@ contract EmployerPayroll {
     }
 
     /// @notice Get the linked employee agreement contract address.
-    function getEmployeePortal(address addr) external view returns (address) {
+    function getEmployeePortal(address addr) external view onlyEmployerOrLinkedPortal(addr) returns (address) {
         return _employeeContracts[addr];
     }
 
     /// @notice Return the list of all employee addresses (including removed ones).
-    function getEmployeeList() external view returns (address[] memory) {
+    function getEmployeeList() external view onlyEmployer returns (address[] memory) {
         return _employeeList;
     }
 
     /// @notice Total number of employee addresses ever registered.
-    function getEmployeeCount() external view returns (uint256) {
+    function getEmployeeCount() external view onlyEmployer returns (uint256) {
         return _employeeList.length;
     }
 
     /// @notice Current ETH balance held by this contract.
-    function getBalance() external view returns (uint256) {
+    function getBalance() external view onlyEmployer returns (uint256) {
         return address(this).balance;
     }
 
     /// @notice Whether a given employee is currently due for payment.
-    function isPaymentDue(address addr) external view returns (bool) {
+    function isPaymentDue(address addr) external view onlyEmployerOrLinkedPortal(addr) returns (bool) {
         Employee storage emp = _employees[addr];
         return emp.active && !_employeeRemoved[addr] && _isDue(emp);
+    }
+
+    // ─────────────────────────────────────────────
+    //  ZK proof support
+    // ─────────────────────────────────────────────
+
+    /**
+     * @notice Store a Poseidon commitment to an employee's wage for use in ZK proofs.
+     *         The commitment is publicly readable so that third-party verifiers can
+     *         confirm that an employee's ZK proof is anchored to the on-chain wage record.
+     *
+     *         Commitment scheme (computed off-chain by the employer in Cairo):
+     *             wage_commitment = poseidon_hash(wage_low, wage_high, salt)
+     *         where wage_low / wage_high are the low and high 128-bit limbs of wageWei.
+     *
+     * @param addr       Employee wallet address.
+     * @param commitment Poseidon hash of the employee's wage and a random salt.
+     */
+    function setWageCommitment(address addr, bytes32 commitment) external onlyEmployer {
+        _requireCurrentEmployee(addr);
+        require(uint256(commitment) >> 252 == 0, "EmployerPayroll: commitment exceeds felt252 range");
+        _employees[addr].wageCommitment = commitment;
+    }
+
+    /**
+     * @notice Return the on-chain wage commitment for an employee.
+     *         Intentionally public so that any verifier (bank, embassy, etc.) can
+     *         confirm that a ZK proof is anchored to this employer's on-chain record.
+     * @param addr Employee wallet address.
+     * @return The Poseidon commitment to the employee's wage.
+     */
+    function getWageCommitment(address addr) external view returns (bytes32) {
+        require(_employeeContracts[addr] != address(0), "EmployerPayroll: employee not registered");
+        return _employees[addr].wageCommitment;
     }
 
     /**

@@ -391,4 +391,118 @@ describe("EmployerPayroll", function () {
             ).to.be.revertedWith("EmployerPayroll: employee not found");
         });
     });
+
+    describe("Access control", function () {
+        beforeEach(async function () {
+            await registerEmployee(employee1);
+        });
+
+        it("getEmployee() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployee(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("getEmployeeMeta() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeeMeta(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("getEmployeeAgreement() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeeAgreement(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("getEmployeePortal() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeePortal(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("isPaymentDue() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).isPaymentDue(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("getEmployeeList() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeeList()
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("getEmployeeCount() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeeCount()
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("getBalance() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getBalance()
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("getEmployee() succeeds when called via the linked employee portal", async function () {
+            const portal = await ethers.getContractAt(
+                "EmployeePortal",
+                await payroll.getEmployeePortal(employee1.address)
+            );
+            // getContractDetails() delegates to payroll.getEmployee() with msg.sender == portal
+            const [addr] = await portal.connect(employee1).getContractDetails();
+            expect(addr).to.equal(employee1.address);
+        });
+    });
+
+    describe("setWageCommitment() / getWageCommitment()", function () {
+        // A valid felt252 commitment: top 4 bits are zero (value < 2^252)
+        const VALID_COMMITMENT = "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        const INVALID_COMMITMENT = "0xf123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+        beforeEach(async function () {
+            await registerEmployee(employee1);
+        });
+
+        it("allows the employer to store and retrieve a wage commitment", async function () {
+            await payroll.setWageCommitment(employee1.address, VALID_COMMITMENT);
+            expect(await payroll.getWageCommitment(employee1.address)).to.equal(VALID_COMMITMENT);
+        });
+
+        it("allows anyone to read the wage commitment (needed for ZK verification)", async function () {
+            await payroll.setWageCommitment(employee1.address, VALID_COMMITMENT);
+            expect(await payroll.connect(other).getWageCommitment(employee1.address)).to.equal(VALID_COMMITMENT);
+        });
+
+        it("reverts if commitment exceeds felt252 range", async function () {
+            await expect(
+                payroll.setWageCommitment(employee1.address, INVALID_COMMITMENT)
+            ).to.be.revertedWith("EmployerPayroll: commitment exceeds felt252 range");
+        });
+
+        it("reverts if caller is not the employer", async function () {
+            await expect(
+                payroll.connect(other).setWageCommitment(employee1.address, VALID_COMMITMENT)
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("reverts if employee is not found", async function () {
+            await expect(
+                payroll.setWageCommitment(employee2.address, VALID_COMMITMENT)
+            ).to.be.revertedWith("EmployerPayroll: employee not found");
+        });
+
+        it("reverts getWageCommitment for an address that was never registered", async function () {
+            await expect(
+                payroll.getWageCommitment(other.address)
+            ).to.be.revertedWith("EmployerPayroll: employee not registered");
+        });
+
+        it("allows getWageCommitment for a removed employee", async function () {
+            await payroll.setWageCommitment(employee1.address, VALID_COMMITMENT);
+            await payroll.removeEmployee(employee1.address);
+            expect(await payroll.getWageCommitment(employee1.address)).to.equal(VALID_COMMITMENT);
+        });
+    });
 });

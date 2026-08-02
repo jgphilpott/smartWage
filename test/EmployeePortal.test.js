@@ -123,4 +123,34 @@ describe("EmployeePortal", function () {
             expect(active).to.be.true;
         });
     });
+
+    describe("Access control", function () {
+        it("getContractDetails() reverts for an unauthorized caller", async function () {
+            await expect(
+                portal.connect(other).getContractDetails()
+            ).to.be.revertedWith("EmployeePortal: access denied");
+        });
+
+        it("getEmployeeMeta() reverts for an unauthorized caller", async function () {
+            await expect(
+                portal.connect(other).getEmployeeMeta()
+            ).to.be.revertedWith("EmployeePortal: access denied");
+        });
+
+        it("getAgreementStatus() reverts for an unauthorized caller", async function () {
+            await expect(
+                portal.connect(other).getAgreementStatus()
+            ).to.be.revertedWith("EmployeePortal: access denied");
+        });
+
+        it("getContractDetails() succeeds for the employee", async function () {
+            const [addr] = await portal.connect(employee).getContractDetails();
+            expect(addr).to.equal(employee.address);
+        });
+
+        it("getContractDetails() succeeds for the employer", async function () {
+            const [addr] = await portal.connect(employer).getContractDetails();
+            expect(addr).to.equal(employee.address);
+        });
+    });
 });
