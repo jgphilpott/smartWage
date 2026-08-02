@@ -76,11 +76,12 @@ the _official_ frontend) is arguably the most "DeFi native" monetisation method.
 
 **How it works:**
 
-- A fee recipient address (a multisig or ENS-named treasury) is embedded in the
-  deployed factory/registry contract used by the official UI.
-- Users who deploy contracts through the official dApp have this fee applied.
-- The _open-source_ contracts do not hard-code the fee — anyone forking the repo
-  and deploying independently pays nothing.
+- A fee recipient address (a multisig or ENS-named treasury) would be embedded in
+  a future factory/registry contract added to the official UI deployment flow.
+- Users who deploy contracts through that official dApp path would have this fee
+  applied.
+- The _open-source_ contracts would still not hard-code the fee — anyone forking
+  the repo and deploying independently would pay nothing.
 
 **Revenue path to $100K:**
 - 0.25% fee on $40M total payroll processed annually.
@@ -100,10 +101,11 @@ their own cron job or keeper bot is a friction point.
 
 **How it works:**
 
-- A subscription service monitors all registered `EmployerPayroll` contracts and
-  calls `processDuePayments` on the correct schedule.
-- The employer pays a flat monthly fee; gas costs are either included (subscription
-  covers gas) or passed through at cost.
+- A subscription service would monitor `EmployerPayroll` contracts that opt in to
+  automation, with a registry/discovery layer introduced as part of that plan,
+  and call `processDuePayments` on the correct schedule.
+- The employer would pay a flat monthly fee; gas costs are either included
+  (subscription covers gas) or passed through at cost.
 
 **Pricing model:**
 
