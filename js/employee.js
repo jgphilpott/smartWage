@@ -159,7 +159,7 @@ async function refreshDashboard() {
         setPaymentSnapshot(details);
 
         const historyPanel = document.getElementById("pay-history-panel");
-        const historyVisible = historyPanel && historyPanel.style.display !== "none" && !historyPanel.classList.contains("hide");
+        const historyVisible = historyPanel && historyPanel.style.display !== "none";
         if (historyVisible) {
             await viewPayHistory();
         }
@@ -208,6 +208,7 @@ async function viewPayHistory() {
     if (!linkedPayrollAddress) return;
 
     document.getElementById("agreement-card").style.display = "none";
+    historyEl.classList.remove("hide");
     historyEl.style.display = "block";
     historyBody.innerHTML = `<tr><td colspan="5" class="empty-state">Loading…</td></tr>`;
 
@@ -286,11 +287,37 @@ async function handleProcessDuePayments() {
     try {
         showToast("Processing due payments…", "info");
         await ensureEmployerEventAbiLoaded();
+        const [, , , lastPaidBefore] = await portalContract.getContractDetails();
         const payroll = new ethers.Contract(linkedPayrollAddress, EMPLOYER_PAYROLL_ABI, signer);
         const tx = await payroll.processDuePayments(0, MAX_UINT256);
-        await tx.wait();
-        showToast("Due payments processed.", "success");
+        const receipt = await tx.wait();
+        const iface = new ethers.Interface(EMPLOYER_PAYROLL_ABI);
+        let paidWei = 0n;
+        for (const log of receipt.logs) {
+            try {
+                const parsed = iface.parseLog(log);
+                if (
+                    parsed &&
+                    parsed.name === "PaymentSent" &&
+                    String(parsed.args.employee).toLowerCase() === userAddress.toLowerCase()
+                ) {
+                    paidWei += BigInt(parsed.args.amount);
+                }
+            } catch (_) {
+                // ignore unrelated logs
+            }
+        }
+
         await refreshDashboard();
+        const [, , , lastPaidAfter] = await portalContract.getContractDetails();
+
+        if (paidWei > 0n) {
+            showToast(`Due payments processed: received ${formatWei(paidWei)}.`, "success");
+        } else if (BigInt(lastPaidAfter) !== BigInt(lastPaidBefore)) {
+            showToast("Due payments processed.", "success");
+        } else {
+            showToast("No payment was sent. Payroll may be underfunded or no full cycle is due yet.", "info", 7000);
+        }
     } catch (err) {
         showToast(err.reason || err.message, "error");
     }
@@ -365,6 +392,7 @@ async function onWalletReady() {
     document.getElementById("disconnect-btn").addEventListener("click", showSetup);
     document.getElementById("refresh-btn").addEventListener("click", refreshDashboard);
     document.getElementById("close-history-btn").addEventListener("click", () => {
+        document.getElementById("pay-history-panel").classList.add("hide");
         document.getElementById("pay-history-panel").style.display = "none";
         document.getElementById("agreement-card").style.display = "block";
     });
