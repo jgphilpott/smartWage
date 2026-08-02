@@ -491,7 +491,6 @@ async function onWalletReady() {
     document.getElementById("deposit-form").addEventListener("submit", handleDeposit);
     document.getElementById("show-deposit-btn").addEventListener("click", showDepositForm);
     document.getElementById("hide-deposit-btn").addEventListener("click", hideDepositForm);
-    document.getElementById("refresh-funds-history-btn").addEventListener("click", loadFundsHistory);
     document.getElementById("process-due-btn").addEventListener("click", handleProcessDue);
     document.getElementById("edit-form").addEventListener("submit", handleUpdateEmployee);
     document.getElementById("close-edit-modal").addEventListener("click", closeEditModal);

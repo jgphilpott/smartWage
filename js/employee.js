@@ -11,7 +11,6 @@ let portalContract = null;
 let portalAddress = null;
 let linkedPayrollAddress = null;
 const STORAGE_KEY = "smartwage_employee_contract";
-const MAX_UINT256 = (1n << 256n) - 1n;
 let paymentSnapshot = null;
 let paymentTicker = null;
 
@@ -157,6 +156,12 @@ async function refreshDashboard() {
 
         renderAgreementDetails(details, meta, payrollAddr);
         setPaymentSnapshot(details);
+
+        const historyPanel = document.getElementById("pay-history-panel");
+        const historyVisible = historyPanel && historyPanel.style.display !== "none" && !historyPanel.classList.contains("hide");
+        if (historyVisible) {
+            await viewPayHistory();
+        }
     } catch (err) {
         console.error("refreshDashboard failed:", err);
         showToast("Failed to load agreement: " + err.message, "error");
@@ -281,7 +286,8 @@ async function handleProcessDuePayments() {
         showToast("Processing due payments…", "info");
         await ensureEmployerEventAbiLoaded();
         const payroll = new ethers.Contract(linkedPayrollAddress, EMPLOYER_PAYROLL_ABI, signer);
-        const tx = await payroll.processDuePayments(0, MAX_UINT256);
+        const count = await payroll.getEmployeeCount();
+        const tx = await payroll.processDuePayments(0, count);
         await tx.wait();
         showToast("Due payments processed.", "success");
         await refreshDashboard();
