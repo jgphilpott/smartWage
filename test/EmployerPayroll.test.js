@@ -391,4 +391,100 @@ describe("EmployerPayroll", function () {
             ).to.be.revertedWith("EmployerPayroll: employee not found");
         });
     });
+
+    describe("Access control", function () {
+        beforeEach(async function () {
+            await registerEmployee(employee1);
+        });
+
+        it("getEmployee() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployee(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("getEmployeeMeta() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeeMeta(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("getEmployeeAgreement() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeeAgreement(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("getEmployeePortal() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeePortal(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("isPaymentDue() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).isPaymentDue(employee1.address)
+            ).to.be.revertedWith("EmployerPayroll: access denied");
+        });
+
+        it("getEmployeeList() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeeList()
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("getEmployeeCount() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getEmployeeCount()
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("getBalance() reverts for an unauthorized caller", async function () {
+            await expect(
+                payroll.connect(other).getBalance()
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("getEmployee() succeeds when called via the linked employee portal", async function () {
+            const portal = await ethers.getContractAt(
+                "EmployeePortal",
+                await payroll.getEmployeePortal(employee1.address)
+            );
+            // getContractDetails() delegates to payroll.getEmployee() with msg.sender == portal
+            const [addr] = await portal.connect(employee1).getContractDetails();
+            expect(addr).to.equal(employee1.address);
+        });
+    });
+
+    describe("setWageCommitment() / getWageCommitment()", function () {
+        beforeEach(async function () {
+            await registerEmployee(employee1);
+        });
+
+        it("allows the employer to store and retrieve a wage commitment", async function () {
+            const commitment = ethers.keccak256(ethers.toUtf8Bytes("test-commitment"));
+            await payroll.setWageCommitment(employee1.address, commitment);
+            expect(await payroll.getWageCommitment(employee1.address)).to.equal(commitment);
+        });
+
+        it("allows anyone to read the wage commitment (needed for ZK verification)", async function () {
+            const commitment = ethers.keccak256(ethers.toUtf8Bytes("test-commitment"));
+            await payroll.setWageCommitment(employee1.address, commitment);
+            expect(await payroll.connect(other).getWageCommitment(employee1.address)).to.equal(commitment);
+        });
+
+        it("reverts if caller is not the employer", async function () {
+            const commitment = ethers.keccak256(ethers.toUtf8Bytes("test-commitment"));
+            await expect(
+                payroll.connect(other).setWageCommitment(employee1.address, commitment)
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("reverts if employee is not found", async function () {
+            const commitment = ethers.keccak256(ethers.toUtf8Bytes("test-commitment"));
+            await expect(
+                payroll.setWageCommitment(employee2.address, commitment)
+            ).to.be.revertedWith("EmployerPayroll: employee not found");
+        });
+    });
 });

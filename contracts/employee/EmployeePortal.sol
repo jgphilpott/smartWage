@@ -67,6 +67,15 @@ contract EmployeePortal {
         _;
     }
 
+    /// @dev Grants access to the employee or the employer.
+    modifier onlyParties() {
+        require(
+            msg.sender == employee || msg.sender == employer,
+            "EmployeePortal: access denied"
+        );
+        _;
+    }
+
     // ─────────────────────────────────────────────
     //  Constructor
     // ─────────────────────────────────────────────
@@ -110,6 +119,7 @@ contract EmployeePortal {
     function getContractDetails()
         external
         view
+        onlyParties
         returns (
             address addr,
             uint256 wageWei,
@@ -127,6 +137,7 @@ contract EmployeePortal {
     function getEmployeeMeta()
         external
         view
+        onlyParties
         returns (
             string memory,
             string memory,
@@ -142,7 +153,7 @@ contract EmployeePortal {
     /**
      * @notice Return whether the employee has signed and whether the linked payroll record is active.
      */
-    function getAgreementStatus() external view returns (bool contractSigned, bool active) {
+    function getAgreementStatus() external view onlyParties returns (bool contractSigned, bool active) {
         (, , , , active) = IEmployerPayroll(employerPayroll).getEmployee(employee);
         return (signed, active);
     }

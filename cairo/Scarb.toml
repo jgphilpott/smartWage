@@ -1,0 +1,10 @@
+[package]
+name = "minimum_income_proof"
+version = "0.1.0"
+edition = "2024_07"
+
+# Cairo standard library is included by default.
+# No additional dependencies are required for this proof of concept.
+
+[[target.executable]]
+name = "minimum_income_proof"
