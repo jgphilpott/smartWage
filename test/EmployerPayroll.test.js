@@ -347,6 +347,25 @@ describe("EmployerPayroll", function () {
             ).to.not.be.reverted;
         });
 
+        it("partially catches up and preserves unpaid cycles when underfunded", async function () {
+            const ONE_MINUTE = 60;
+            const highWage = ethers.parseEther("0.2");
+            await registerAndSignEmployee(employee1, highWage, ONE_MINUTE);
+            await time.increase((10 * ONE_MINUTE) + 1);
+
+            const [, , payFrequency, initialLastPaid] = await payroll.getEmployee(employee1.address);
+            const before = await ethers.provider.getBalance(employee1.address);
+
+            await payroll.connect(other).processDuePaymentFor(employee1.address);
+
+            const after = await ethers.provider.getBalance(employee1.address);
+            const [, , , updatedLastPaid] = await payroll.getEmployee(employee1.address);
+
+            expect(after - before).to.equal(ethers.parseEther("1"));
+            expect(updatedLastPaid - initialLastPaid).to.equal(payFrequency * 5n);
+            expect(await payroll.isPaymentDue(employee1.address)).to.be.true;
+        });
+
         it("pays the targeted employee's full accrued cycles when funded", async function () {
             const ONE_MINUTE = 60;
             const wage = ethers.parseEther("0.1");

@@ -104,7 +104,7 @@ The **Employees** tab lists all current employees. For each employee you can:
 
 #### Running due payments
 
-Click **⚡ Run Due Payments** on the employer dashboard to trigger `processDuePayments(start, count)`. This is permissionless — anyone (employer, employee, keeper bot, cron job) can call it. Use pagination (`start` and `count`) to process a bounded slice of the employee list per transaction and avoid block gas-limit issues as the list grows. On the employee dashboard, **⚡ Run Due Payments** triggers `processDuePaymentFor(employee)` to process that employee's accrued cycles directly. If multiple pay cycles elapsed between runs, wages accrue and are paid in a catch-up transfer when this method is called. If the contract is underfunded, it pays as many full cycles as possible and leaves the remainder due for the next run.
+Click **⚡ Run Due Payments** on the employer dashboard to trigger `processDuePayments(start, count)`. This is permissionless — anyone (employer, employee, keeper bot, cron job) can call it. Use pagination (`start` and `count`) to process a bounded slice of the employee list per transaction and avoid block gas-limit issues as the list grows. On the employee dashboard, **⚡ Run Due Payments** triggers `processDuePaymentFor(employeeAddress)` to process that employee's accrued cycles directly. If multiple pay cycles elapsed between runs, wages accrue and are paid in a catch-up transfer when this method is called. If the contract is underfunded, it pays as many full cycles as possible and leaves the remainder due for the next run.
 
 ### EmployerPayroll — Key Functions
 
