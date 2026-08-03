@@ -62,18 +62,27 @@
                 <div class="card card-row-lg">
                     <div>
                         <div class="muted-xs">Employee contract</div>
-                        <span id="agreement-address-display" class="wallet-address wallet-address-clickable" title="Click to copy"></span>
+                        <span id="agreement-address-display" class="wallet-address wallet-address-clickable truncate" title="Click to copy"></span>
                     </div>
                     <div>
                         <div class="muted-xs">Employer address</div>
-                        <span id="employer-addr-display" class="wallet-address wallet-address-clickable" title="Click to copy"></span>
+                        <span id="employer-addr-display" class="wallet-address wallet-address-clickable truncate" title="Click to copy"></span>
                     </div>
                     <div>
                         <div class="muted-xs">Status</div>
                         <span id="agreement-status-badge" class="badge">—</span>
                     </div>
+                    <div id="accrued-balance-chip" class="topbar-chip hide">
+                        <div class="muted-xs">Accrued</div>
+                        <span id="accrued-balance-value" class="badge">—</span>
+                    </div>
+                    <div id="next-payment-chip" class="topbar-chip hide">
+                        <div class="muted-xs">Next pay</div>
+                        <span id="next-payment-value" class="badge">—</span>
+                    </div>
                     <div class="ml-auto gap-sm d-flex">
                         <button id="refresh-btn" class="btn btn-ghost btn-sm">↺ Refresh</button>
+                        <button id="process-due-btn" type="button" class="btn btn-success btn-sm">⚡ Run Due Payments</button>
                         <button id="disconnect-btn" class="btn btn-danger btn-sm">Disconnect</button>
                     </div>
                 </div>
@@ -86,6 +95,7 @@
                             <button id="view-history-btn" type="button" class="btn btn-primary">View Pay History</button>
                         </div>
                     </div>
+                    <p class="muted-xs mb-2">Your signed employment terms and the live payroll schedule linked to this contract.</p>
                     <div class="table-wrap">
                         <table>
                             <tbody id="agreement-details-tbody">
@@ -100,17 +110,20 @@
                         <h2>Pay History</h2>
                         <button id="close-history-btn" class="btn btn-ghost">✕ Close</button>
                     </div>
+                    <p class="muted-xs mb-2">On-chain salary and bonus transfers sent to this wallet through your linked payroll contract.</p>
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Type</th>
+                                    <th>Address</th>
                                     <th>Amount</th>
+                                    <th>Tx</th>
                                     <th>Date</th>
                                 </tr>
                             </thead>
                             <tbody id="history-tbody">
-                                <tr><td colspan="3" class="empty-state">Loading…</td></tr>
+                                <tr><td colspan="5" class="empty-state">Loading…</td></tr>
                             </tbody>
                         </table>
                     </div>

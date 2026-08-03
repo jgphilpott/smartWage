@@ -376,9 +376,11 @@ tr:hover td {
 /* ── Badges ──────────────────────────────────── */
 
 .badge {
+    background: var(--surface-raised);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
     display: inline-block;
     padding: 0.2rem 0.55rem;
-    border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.3px;
@@ -386,11 +388,13 @@ tr:hover td {
 
 .badge-success {
     background: rgba(96,232,179,0.15);
+    border: 0px solid var(--border);
     color: var(--accent-success);
 }
 
 .badge-danger {
     background: rgba(247,165,57,0.15);
+    border: 0px solid var(--border);
     color: var(--accent-danger);
 }
 
@@ -457,6 +461,18 @@ tr:hover td {
 
 .wallet-address-clickable:hover {
     border-color: var(--accent);
+}
+
+.topbar-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    min-width: 7.5rem;
+}
+
+.topbar-chip-label {
+    color: var(--text-muted);
 }
 
 /* Subtle click-to-copy affordance for addresses/hashes embedded in plain

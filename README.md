@@ -104,7 +104,7 @@ The **Employees** tab lists all current employees. For each employee you can:
 
 #### Running due payments
 
-Click **⚡ Run Due Payments** to trigger `processDuePayments(start, count)`. This is permissionless — anyone (employer, keeper bot, cron job) can call it. Use pagination (`start` and `count`) to process a bounded slice of the employee list per transaction and avoid block gas-limit issues as the list grows. Employees whose payment is not yet due, or whose payment cannot be covered by the current balance, are skipped rather than causing the whole transaction to revert.
+Click **⚡ Run Due Payments** on the employer dashboard to trigger `processDuePayments(start, count)`. This is permissionless — anyone (employer, employee, keeper bot, cron job) can call it. Use pagination (`start` and `count`) to process a bounded slice of the employee list per transaction and avoid block gas-limit issues as the list grows. On the employee dashboard, **⚡ Run Due Payments** triggers `processDuePaymentFor(employeeAddress)` to process that employee's accrued cycles directly. If multiple pay cycles elapsed between runs, wages accrue and are paid in a catch-up transfer when this method is called. If the contract is underfunded, it pays as many full cycles as possible and leaves the remainder due for the next run.
 
 ### EmployerPayroll — Key Functions
 
@@ -126,6 +126,9 @@ payEmployee(address addr)
 
 // Batch-process overdue payments for a slice of the employee list (permissionless)
 processDuePayments(uint256 start, uint256 count)
+
+// Process overdue payments for one employee (permissionless)
+processDuePaymentFor(address addr)
 
 // Send a one-off bonus
 sendBonus(address addr, uint256 amount)
@@ -153,6 +156,8 @@ Once connected, the employee dashboard shows:
 - wage and pay frequency
 - profile metadata such as title, department, employment type, and start date
 - whether the agreement is still pending signature or already active
+- a **Run Due Payments** action for triggering permissionless catch-up processing
+- top-bar indicators for accrued unpaid wages and time until the next scheduled payment
 
 The first scheduled payment becomes due after one full pay cycle from the time you sign.
 
