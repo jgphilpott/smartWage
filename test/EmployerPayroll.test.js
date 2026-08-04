@@ -80,11 +80,12 @@ describe("EmployerPayroll", function () {
 
             expect(await payroll.getEmployeePortal(employee1.address)).to.equal(portalAddress);
 
-            const [addr, wageWei, payFrequency, lastPaid, active] = await payroll.getEmployee(employee1.address);
+            const [addr, wageWei, payFrequency, lastPaid, activatedAt, active] = await payroll.getEmployee(employee1.address);
             expect(addr).to.equal(employee1.address);
             expect(wageWei).to.equal(WAGE);
             expect(payFrequency).to.equal(ONE_WEEK);
             expect(lastPaid).to.equal(0);
+            expect(activatedAt).to.equal(0);
             expect(active).to.be.false;
 
             const [employeeContract, agreementActive, removed] = await payroll.getEmployeeAgreement(employee1.address);
@@ -148,9 +149,10 @@ describe("EmployerPayroll", function () {
             await expect(portal.connect(employee1).signContract())
                 .to.emit(payroll, "EmployeeActivated");
 
-            const [, , , lastPaid, active] = await payroll.getEmployee(employee1.address);
+            const [, , , lastPaid, activatedAt, active] = await payroll.getEmployee(employee1.address);
             expect(active).to.be.true;
             expect(lastPaid).to.be.gt(0);
+            expect(activatedAt).to.equal(lastPaid);
         });
 
         it("reverts when someone else attempts to sign", async function () {
@@ -481,6 +483,36 @@ describe("EmployerPayroll", function () {
                     employee2.address, "Jane", "Eng", "Dev", "", "Full-time", "2025-01-01"
                 )
             ).to.be.revertedWith("EmployerPayroll: employee not found");
+        });
+
+        it("returns public employment proof context", async function () {
+            await payroll.setWageCommitment(
+                employee1.address,
+                "0x0000000000000000000000000000000000000000000000000000000000000123"
+            );
+            const portal = await ethers.getContractAt(
+                "EmployeePortal",
+                await payroll.getEmployeePortal(employee1.address)
+            );
+            await portal.connect(employee1).signContract();
+
+            const [
+                employerAddress,
+                employeeAddress,
+                active,
+                activatedAt,
+                payFrequency,
+                lastPaid,
+                startDate
+            ] = await payroll.getEmploymentProofContext(employee1.address);
+
+            expect(employerAddress).to.equal(employer.address);
+            expect(employeeAddress).to.equal(employee1.address);
+            expect(active).to.be.true;
+            expect(activatedAt).to.be.gt(0);
+            expect(payFrequency).to.equal(ONE_WEEK);
+            expect(lastPaid).to.be.gte(activatedAt);
+            expect(startDate).to.equal("2025-01-15");
         });
     });
 

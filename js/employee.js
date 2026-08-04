@@ -99,7 +99,7 @@ function updatePaymentChips() {
 }
 
 function setPaymentSnapshot(details) {
-    const [, wageWei, payFrequency, lastPaid, active] = details;
+    const [, wageWei, payFrequency, lastPaid, , active] = details;
     paymentSnapshot = {
         wageWei: BigInt(wageWei),
         payFrequency: BigInt(payFrequency),
@@ -172,7 +172,7 @@ function renderAgreementDetails(details, meta, payrollAddr) {
     const tbody = document.getElementById("agreement-details-tbody");
     if (!tbody) return;
 
-    const [employeeAddr, wageWei, payFrequency, lastPaid, active] = details;
+    const [employeeAddr, wageWei, payFrequency, lastPaid, activatedAt, active] = details;
     const [name, department, jobTitle, jobDescription, employmentType, startDate] = meta;
 
     const walletValue = employeeAddr || userAddress;
@@ -185,6 +185,7 @@ function renderAgreementDetails(details, meta, payrollAddr) {
         ["Department", department || "—"],
         ["Employment type", employmentType || "—"],
         ["Start date", startDate || "—"],
+        ["Activated at", activatedAt ? formatTimestamp(activatedAt) : "—"],
         ["Wage per cycle", formatWei(wageWei)],
         ["Pay frequency", formatFrequency(payFrequency)],
         ["Last paid", formatTimestamp(lastPaid)],

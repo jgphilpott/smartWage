@@ -24,6 +24,7 @@ contract EmployerPayroll {
         uint256 wageWei;           // amount paid each cycle (in wei)
         uint256 payFrequency;      // seconds between payments (e.g. 604800 = weekly)
         uint256 lastPaid;          // unix timestamp of last payment (0 = never)
+        uint256 activatedAt;       // unix timestamp when the employee signed and became active
         bool    active;
         bytes32 wageCommitment;    // Poseidon commitment to wageWei, used for ZK proofs
     }
@@ -136,6 +137,7 @@ contract EmployerPayroll {
             wageWei: wageWei,
             payFrequency: payFrequency,
             lastPaid: 0,
+            activatedAt: 0,
             active: false,
             wageCommitment: bytes32(0)
         });
@@ -330,11 +332,12 @@ contract EmployerPayroll {
             uint256,
             uint256,
             uint256,
+            uint256,
             bool
         )
     {
         Employee storage emp = _employees[addr];
-        return (emp.addr, emp.wageWei, emp.payFrequency, emp.lastPaid, emp.active);
+        return (emp.addr, emp.wageWei, emp.payFrequency, emp.lastPaid, emp.activatedAt, emp.active);
     }
 
     /**
@@ -432,6 +435,36 @@ contract EmployerPayroll {
     }
 
     /**
+     * @notice Return the public facts needed to anchor employment-related ZK proofs.
+     * @param addr Employee wallet address.
+     * @return employerAddress        The payroll contract deployer / employer address.
+     * @return employeeAddress        The employee wallet address.
+     * @return active                 Whether the employee is currently active.
+     * @return activatedAt            Timestamp when the employee became active.
+     * @return payFrequency           Scheduled pay frequency in seconds.
+     * @return lastPaid               Timestamp of the latest successful payroll payment.
+     * @return startDate             ISO-8601 employment start date string.
+     */
+    function getEmploymentProofContext(address addr)
+        external
+        view
+        returns (
+            address employerAddress,
+            address employeeAddress,
+            bool active,
+            uint256 activatedAt,
+            uint256 payFrequency,
+            uint256 lastPaid,
+            string memory startDate
+        )
+    {
+        require(_employeeContracts[addr] != address(0), "EmployerPayroll: employee not registered");
+        Employee storage emp = _employees[addr];
+        EmployeeMeta storage meta = _employeeMeta[addr];
+        return (employer, emp.addr, emp.active && !_employeeRemoved[addr], emp.activatedAt, emp.payFrequency, emp.lastPaid, meta.startDate);
+    }
+
+    /**
      * @notice Activate an employee after they sign their linked employee agreement.
      * @param addr Employee wallet address.
      */
@@ -442,6 +475,7 @@ contract EmployerPayroll {
         require(msg.sender == employeeContract, "EmployerPayroll: caller is not employee contract");
         require(!_employees[addr].active, "EmployerPayroll: employee already active");
 
+        _employees[addr].activatedAt = block.timestamp;
         _employees[addr].lastPaid = block.timestamp;
         _employees[addr].active = true;
         emit EmployeeActivated(addr, employeeContract);
