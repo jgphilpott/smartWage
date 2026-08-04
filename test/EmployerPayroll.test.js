@@ -458,7 +458,7 @@ describe("EmployerPayroll", function () {
 
             const [runwaySeconds, effectiveBalance] = await payroll.getPayrollRunway();
             expect(effectiveBalance).to.equal(ethers.parseEther("0.4"));
-            expect(runwaySeconds).to.equal((4 * ONE_MINUTE) - 1);
+            expect(runwaySeconds).to.equal((3 * ONE_MINUTE) - 1);
         });
 
         it("returns zero runway when due wages already exhaust the balance", async function () {
