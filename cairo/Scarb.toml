@@ -1,10 +1,19 @@
 [package]
-name = "minimum_income_proof"
+name = "smartwage_proofs"
 version = "0.1.0"
 edition = "2024_07"
 
 # Cairo standard library is included by default.
-# No additional dependencies are required for this proof of concept.
+# No additional dependencies are required for these proofs.
 
 [[target.executable]]
 name = "minimum_income_proof"
+source_path = "src/minimum_income_proof.cairo"
+
+[[target.executable]]
+name = "maximum_income_proof"
+source_path = "src/maximum_income_proof.cairo"
+
+[[target.executable]]
+name = "salary_range_proof"
+source_path = "src/salary_range_proof.cairo"

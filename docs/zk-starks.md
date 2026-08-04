@@ -48,7 +48,7 @@ express the range proofs and commitment checks described in this document.
 
 ## Potential applications
 
-### 1. Minimum income proof *(proof of concept — implemented)*
+### 1. Minimum income proof *(implemented)*
 
 **Statement proven:** "My wage per pay cycle is at or above amount X."
 
@@ -58,7 +58,17 @@ assessments.
 **What the verifier learns:** Only that the wage is ≥ X.  The exact salary, pay
 frequency, employer name, and all other employment details remain hidden.
 
-### 2. Salary range proof
+### 2. Maximum income proof *(implemented)*
+
+**Statement proven:** "My wage per pay cycle is at or below amount X."
+
+**Use cases:** Tax bracket eligibility, food subsidy or benefit scheme applications,
+means-tested programme qualification.
+
+**What the verifier learns:** Only that the wage is ≤ X.  All other employment
+details remain hidden.
+
+### 3. Salary range proof *(implemented)*
 
 **Statement proven:** "My annual salary is between £A and £B."
 
@@ -121,7 +131,7 @@ readable by the employer or the employee's linked portal contract.
 
 ### Off-chain proving component (Cairo 2)
 
-The Cairo program in `/cairo/src/lib.cairo` implements the minimum income proof.
+The Cairo programs in `/cairo/src/` implement the income proofs.
 When the employee wants to prove their income to a third party:
 
 1. The employee (or a proving service acting on their behalf) runs the Cairo
@@ -215,28 +225,32 @@ expected deployment model for production use.
 
 ## Proof of concept
 
-The minimum income proof is implemented as a Cairo 2 executable in:
+Three income proofs are implemented as Cairo 2 executables in:
 
 ```
 cairo/
-├── Scarb.toml          # Scarb package manifest
+├── Scarb.toml                      # Scarb package manifest
 └── src/
-    └── lib.cairo       # Cairo 2 proof program
+    ├── lib.cairo                   # Original minimum income proof (alias)
+    ├── minimum_income_proof.cairo  # Proves wage >= threshold
+    ├── maximum_income_proof.cairo  # Proves wage <= threshold
+    └── salary_range_proof.cairo    # Proves lower <= wage <= upper
 ```
 
-See the inline documentation in `lib.cairo` for build and run instructions.
+See the inline documentation in each `.cairo` file for build and run instructions.
 
 ---
 
 ## Next steps
 
 1. **On-chain Starknet verifier** — a Starknet contract that accepts a STARK proof
-   and public inputs, verifies the proof, and emits a `MinimumIncomeVerified` event
-   that third parties can query.
-2. **Additional proof types** — employment duration, salary range, employer
-   membership (see *Potential applications* above).
+   and public inputs, verifies the proof, and emits verification events
+   (`MinimumIncomeVerified`, `MaximumIncomeVerified`, `SalaryRangeVerified`) that
+   third parties can query.
+2. **Additional proof types** — employment duration, employer membership, tax
+   compliance, payroll regularity (see *Potential applications* above).
 3. **Frontend integration** — a UI flow where the employee selects a proof type,
-   enters the public threshold, and downloads a proof file to share with a verifier.
+   enters the public threshold(s), and downloads a proof file to share with a verifier.
 4. **Proving service** — an off-chain service that generates proofs on behalf of
    employees, with appropriate access controls so only the employee can trigger
    their own proof.
