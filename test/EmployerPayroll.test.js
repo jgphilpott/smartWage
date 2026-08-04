@@ -436,6 +436,44 @@ describe("EmployerPayroll", function () {
         });
     });
 
+    describe("getPayrollRunway()", function () {
+        it("returns the next shortfall time for active employees", async function () {
+            const ONE_DAY = 24 * 60 * 60;
+            const wage = ethers.parseEther("0.1");
+            await payroll.deposit({ value: ethers.parseEther("0.1") });
+            await registerAndSignEmployee(employee1, wage, ONE_DAY);
+
+            const [, effectiveBalance] = await payroll.getPayrollRunway();
+            expect(effectiveBalance).to.equal(ethers.parseEther("1.1"));
+
+            const latest = await time.latest();
+            const [runwaySeconds] = await payroll.getPayrollRunway();
+            expect(runwaySeconds).to.equal((latest + (11 * ONE_DAY)) - latest);
+        });
+
+        it("subtracts currently due unpaid wages before projecting runway", async function () {
+            const ONE_MINUTE = 60;
+            const wage = ethers.parseEther("0.2");
+            await registerAndSignEmployee(employee1, wage, ONE_MINUTE);
+            await time.increase((3 * ONE_MINUTE) + 1);
+
+            const [runwaySeconds, effectiveBalance] = await payroll.getPayrollRunway();
+            expect(effectiveBalance).to.equal(ethers.parseEther("0.4"));
+            expect(runwaySeconds).to.equal(ONE_MINUTE);
+        });
+
+        it("returns zero runway when due wages already exhaust the balance", async function () {
+            const ONE_MINUTE = 60;
+            const wage = ethers.parseEther("0.5");
+            await registerAndSignEmployee(employee1, wage, ONE_MINUTE);
+            await time.increase((3 * ONE_MINUTE) + 1);
+
+            const [runwaySeconds, effectiveBalance] = await payroll.getPayrollRunway();
+            expect(runwaySeconds).to.equal(0);
+            expect(effectiveBalance).to.equal(0);
+        });
+    });
+
     describe("getEmployeeList() / getEmployeeCount()", function () {
         it("returns all registered employee addresses", async function () {
             await registerEmployee(employee1);

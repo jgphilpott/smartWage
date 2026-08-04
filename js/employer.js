@@ -33,6 +33,34 @@ function getContract(address) {
     return new ethers.Contract(address, EMPLOYER_ABI, signer);
 }
 
+function formatDuration(seconds) {
+    const totalSeconds = Number(seconds);
+    if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return "Due now";
+
+    const units = [
+        { label: "y", value: 365 * 24 * 60 * 60 },
+        { label: "mo", value: 30 * 24 * 60 * 60 },
+        { label: "w", value: 7 * 24 * 60 * 60 },
+        { label: "d", value: 24 * 60 * 60 },
+        { label: "h", value: 60 * 60 },
+        { label: "m", value: 60 }
+    ];
+
+    const parts = [];
+    let remainder = Math.floor(totalSeconds);
+
+    for (const unit of units) {
+        if (remainder < unit.value) continue;
+        const amount = Math.floor(remainder / unit.value);
+        remainder %= unit.value;
+        parts.push(`${amount}${unit.label}`);
+        if (parts.length === 2) break;
+    }
+
+    if (parts.length === 0) return remainder === 1 ? "1s" : `${remainder}s`;
+    return parts.join(" ");
+}
+
 async function handleDeployNewContract() {
     if (!signer) {
         showToast("Connect your wallet first.", "error");
@@ -70,12 +98,15 @@ async function refreshDashboard() {
     if (!payrollContract) return;
 
     try {
-        const [balance, employeeList] = await Promise.all([
+        const [balance, employeeList, runway] = await Promise.all([
             payrollContract.getBalance(),
-            payrollContract.getEmployeeList()
+            payrollContract.getEmployeeList(),
+            payrollContract.getPayrollRunway()
         ]);
 
-        document.getElementById("contract-balance").textContent = formatWei(balance);
+        const [runwaySeconds, effectiveBalance] = runway;
+        document.getElementById("contract-balance").textContent = `${formatWei(balance)} · ${formatDuration(runwaySeconds)} runway`;
+        document.getElementById("contract-balance").title = `Projected usable balance after due wages: ${formatWei(effectiveBalance)}`;
         const addrDisplay = document.getElementById("contract-address-display");
         addrDisplay.textContent = contractAddress;
         addrDisplay.title = "Click to copy";
