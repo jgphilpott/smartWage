@@ -70,7 +70,7 @@ details remain hidden.
 
 ### 3. Salary range proof *(implemented)*
 
-**Statement proven:** "My annual salary is between £A and £B."
+**Statement proven:** "My wage (per pay cycle) is between £A and £B."
 
 **Use cases:** Income-based benefit eligibility, tax bracket confirmation,
 insurance premium calculation.

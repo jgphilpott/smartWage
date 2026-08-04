@@ -108,7 +108,7 @@ fn main(
     );
     assert(computed_commitment == wage_commitment, 'Invalid wage commitment');
 
-    // ── Step 2: Prove the range ───────────────────────────────────────────────
+    // ── Step 2: Prove the maximum ────────────────────────────────────────────
     //
     // Assert the private wage is at or below the public maximum threshold.
     // The STARK proof records that this comparison was executed and succeeded,
