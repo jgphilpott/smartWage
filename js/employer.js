@@ -463,7 +463,39 @@ async function handleSendBonus(e) {
     }
 }
 
-function showDashboard() {
+const COMPANY_STORAGE_KEY = "smartwage_company_details";
+
+const COMPANY_FIELDS = [
+    "company-name", "company-industry", "company-email", "company-phone",
+    "company-website", "company-tax-id", "company-street", "company-city",
+    "company-state", "company-zip", "company-country", "company-notes"
+];
+
+function saveCompanyDetails(e) {
+    e.preventDefault();
+    const details = {};
+    COMPANY_FIELDS.forEach((id) => {
+        details[id] = document.getElementById(id).value;
+    });
+    localStorage.setItem(COMPANY_STORAGE_KEY, JSON.stringify(details));
+    showToast("Company details saved.", "success");
+}
+
+function loadCompanyDetails() {
+    const saved = localStorage.getItem(COMPANY_STORAGE_KEY);
+    if (!saved) return;
+    try {
+        const details = JSON.parse(saved);
+        COMPANY_FIELDS.forEach((id) => {
+            const el = document.getElementById(id);
+            if (el && details[id] !== undefined) el.value = details[id];
+        });
+    } catch {
+        // Silently ignore corrupt data.
+    }
+}
+
+
     document.getElementById("setup-section").style.display = "none";
     document.getElementById("dashboard-section").style.display = "block";
 }
@@ -498,6 +530,8 @@ async function onWalletReady() {
     document.getElementById("close-bonus-modal").addEventListener("click", closeBonusModal);
     document.getElementById("disconnect-btn").addEventListener("click", showSetup);
     document.getElementById("refresh-btn").addEventListener("click", refreshDashboard);
+    document.getElementById("company-form").addEventListener("submit", saveCompanyDetails);
+    loadCompanyDetails();
 
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
