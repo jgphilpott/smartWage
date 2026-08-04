@@ -75,7 +75,7 @@ details remain hidden.
 **Use cases:** Income-based benefit eligibility, tax bracket confirmation,
 insurance premium calculation.
 
-### 3. Employment duration proof
+### 4. Employment duration proof
 
 **Statement proven:** "I have been on this payroll for at least N consecutive
 months with no gap longer than D days."
@@ -83,7 +83,7 @@ months with no gap longer than D days."
 **Use cases:** Visa applications, probationary period confirmation, mortgage
 qualification ("employed for 12+ months").
 
-### 4. Employer membership proof
+### 5. Employer membership proof
 
 **Statement proven:** "I am currently employed by the organisation that deployed
 contract address 0x…"
@@ -92,14 +92,14 @@ contract address 0x…"
 checks where the verifier knows the employer's contract address but should not
 learn the employee's salary.
 
-### 5. Tax compliance proof
+### 6. Tax compliance proof
 
 **Statement proven:** "My employer has made payroll tax withholdings on my behalf
 for every pay cycle in the last 12 months."
 
 **Use cases:** Immigration/tax residency applications, audits.
 
-### 6. Payroll regularity proof
+### 7. Payroll regularity proof
 
 **Statement proven:** "I received at least N payments with no gap longer than D
 days in the last 12 months."
@@ -231,7 +231,6 @@ Three income proofs are implemented as Cairo 2 executables in:
 cairo/
 ├── Scarb.toml                      # Scarb package manifest
 └── src/
-    ├── lib.cairo                   # Original minimum income proof (alias)
     ├── minimum_income_proof.cairo  # Proves wage >= threshold
     ├── maximum_income_proof.cairo  # Proves wage <= threshold
     └── salary_range_proof.cairo    # Proves lower <= wage <= upper
