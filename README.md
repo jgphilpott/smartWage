@@ -14,6 +14,7 @@ A simple and free dApp that uses Ethereum smart contracts to automate the payrol
 - [Connecting to the App](#connecting-to-the-app)
 - [Using the Employer Contract](#using-the-employer-contract)
 - [Using the Employee Contract](#using-the-employee-contract)
+- [ZK-STARK Proofs](#zk-stark-proofs)
 - [Developer Notes](#developer-notes)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -185,6 +186,22 @@ getAgreementStatus()
 ### Legacy note
 
 The employee contract is no longer a multi-employer self-deployed portal. It now represents a single employment agreement created by the employer during onboarding.
+
+---
+
+## ZK-STARK Proofs
+
+smartWage includes a set of [Cairo 2](https://docs.cairo-lang.org/) ZK-STARK programs that let employees prove facts about their salary to third parties **without revealing the actual wage amount**.  The proofs are anchored to an on-chain Poseidon commitment stored by the employer, so no employer letter or payslip needs to be shared.
+
+Three proofs are currently implemented in `cairo/src/`:
+
+| Executable | Statement proven | Example use case |
+|---|---|---|
+| `minimum_income_proof` | wage ≥ X | Mortgage / rental eligibility |
+| `maximum_income_proof` | wage ≤ X | Means-tested benefits, tax bracket |
+| `salary_range_proof`   | A ≤ wage ≤ B | Insurance, tax confirmation |
+
+See [`docs/zk-starks.md`](docs/zk-starks.md) for the full design rationale, commitment scheme, and instructions for building and running the proofs with [Scarb](https://docs.swmansion.com/scarb/).
 
 ---
 
