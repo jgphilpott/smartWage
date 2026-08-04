@@ -496,6 +496,7 @@ function loadCompanyDetails() {
 }
 
 
+function showDashboard() {
     document.getElementById("setup-section").style.display = "none";
     document.getElementById("dashboard-section").style.display = "block";
 }
