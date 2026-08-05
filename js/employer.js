@@ -508,8 +508,8 @@ async function loadCompanyDetails() {
             const el = document.getElementById(id);
             if (el) el.value = values[id] || "";
         });
-    } catch {
-        // Silently ignore — contract may not have details set yet.
+    } catch (err) {
+        console.warn("loadCompanyDetails failed:", err);
     }
 }
 
