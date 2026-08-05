@@ -37,17 +37,35 @@ contract EmployerPayroll {
         string startDate;      // ISO-8601 date string, e.g. "2025-01-15"
     }
 
+    struct CompanyDetails {
+        string name;
+        string industry;
+        string email;
+        string phone;
+        string website;
+        string taxId;
+        string country;
+        string city;
+        string state;
+        string street;
+        string zip;
+        string notes;
+    }
+
     mapping(address => Employee)     private _employees;
     mapping(address => EmployeeMeta) private _employeeMeta;
     mapping(address => address)      private _employeeContracts;
     mapping(address => bool)         private _employeeRemoved;
     address[] private _employeeList;
 
+    CompanyDetails private _companyDetails;
+
     // ─────────────────────────────────────────────
     //  Events
     // ─────────────────────────────────────────────
 
     event FundsDeposited(address indexed from, uint256 amount);
+    event CompanyDetailsUpdated();
     event EmployeeRegistered(address indexed employee, address indexed employeeContract, uint256 wageWei, uint256 payFrequency);
     event EmployeeActivated(address indexed employee, address indexed employeeContract);
     event EmployeeUpdated(address indexed employee, uint256 wageWei, uint256 payFrequency);
@@ -310,6 +328,72 @@ contract EmployerPayroll {
         (bool success, ) = payable(addr).call{value: amount}("");
         require(success, "EmployerPayroll: transfer failed");
         emit BonusSent(addr, amount);
+    }
+
+    // ─────────────────────────────────────────────
+    //  Company details
+    // ─────────────────────────────────────────────
+
+    /**
+     * @notice Store or update the company contact details for this payroll contract.
+     *         All fields are optional — pass an empty string for any field you wish to omit.
+     */
+    function setCompanyDetails(
+        string calldata name,
+        string calldata industry,
+        string calldata email,
+        string calldata phone,
+        string calldata website,
+        string calldata taxId,
+        string calldata country,
+        string calldata city,
+        string calldata state,
+        string calldata street,
+        string calldata zip,
+        string calldata notes
+    ) external onlyEmployer {
+        _companyDetails = CompanyDetails({
+            name: name,
+            industry: industry,
+            email: email,
+            phone: phone,
+            website: website,
+            taxId: taxId,
+            country: country,
+            city: city,
+            state: state,
+            street: street,
+            zip: zip,
+            notes: notes
+        });
+        emit CompanyDetailsUpdated();
+    }
+
+    /**
+     * @notice Return the stored company details.
+     * @return name, industry, email, phone, website, taxId, country, city, state, street, zip, notes.
+     */
+    function getCompanyDetails()
+        external
+        view
+        onlyEmployer
+        returns (
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory
+        )
+    {
+        CompanyDetails storage c = _companyDetails;
+        return (c.name, c.industry, c.email, c.phone, c.website, c.taxId, c.country, c.city, c.state, c.street, c.zip, c.notes);
     }
 
     // ─────────────────────────────────────────────

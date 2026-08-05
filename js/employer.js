@@ -83,6 +83,7 @@ async function refreshDashboard() {
 
         await renderEmployeeTable(employeeList);
         await loadFundsHistory();
+        await loadCompanyDetails();
     } catch (err) {
         console.error("refreshDashboard failed:", err);
         showToast("Failed to load contract data: " + err.message, "error");
@@ -463,35 +464,52 @@ async function handleSendBonus(e) {
     }
 }
 
-const COMPANY_STORAGE_KEY = "smartwage_company_details";
-
 const COMPANY_FIELDS = [
     "company-name", "company-industry", "company-email", "company-phone",
-    "company-website", "company-tax-id", "company-street", "company-city",
-    "company-state", "company-zip", "company-country", "company-notes"
+    "company-website", "company-tax-id", "company-country", "company-city",
+    "company-state", "company-street", "company-zip", "company-notes"
 ];
 
-function saveCompanyDetails(e) {
+async function saveCompanyDetails(e) {
     e.preventDefault();
-    const details = {};
-    COMPANY_FIELDS.forEach((id) => {
-        details[id] = document.getElementById(id).value;
-    });
-    localStorage.setItem(COMPANY_STORAGE_KEY, JSON.stringify(details));
-    showToast("Company details saved.", "success");
+    try {
+        showToast("Saving company details on-chain…", "info");
+        const tx = await payrollContract.setCompanyDetails(
+            document.getElementById("company-name").value.trim(),
+            document.getElementById("company-industry").value.trim(),
+            document.getElementById("company-email").value.trim(),
+            document.getElementById("company-phone").value.trim(),
+            document.getElementById("company-website").value.trim(),
+            document.getElementById("company-tax-id").value.trim(),
+            document.getElementById("company-country").value.trim(),
+            document.getElementById("company-city").value.trim(),
+            document.getElementById("company-state").value.trim(),
+            document.getElementById("company-street").value.trim(),
+            document.getElementById("company-zip").value.trim(),
+            document.getElementById("company-notes").value.trim()
+        );
+        await tx.wait();
+        showToast("Company details saved.", "success");
+    } catch (err) {
+        showToast(err.reason || err.message, "error");
+    }
 }
 
-function loadCompanyDetails() {
-    const saved = localStorage.getItem(COMPANY_STORAGE_KEY);
-    if (!saved) return;
+async function loadCompanyDetails() {
+    if (!payrollContract) return;
     try {
-        const details = JSON.parse(saved);
+        const [name, industry, email, phone, website, taxId, country, city, state, street, zip, notes] =
+            await payrollContract.getCompanyDetails();
+        const values = { "company-name": name, "company-industry": industry, "company-email": email,
+            "company-phone": phone, "company-website": website, "company-tax-id": taxId,
+            "company-country": country, "company-city": city, "company-state": state,
+            "company-street": street, "company-zip": zip, "company-notes": notes };
         COMPANY_FIELDS.forEach((id) => {
             const el = document.getElementById(id);
-            if (el && details[id] !== undefined) el.value = details[id];
+            if (el) el.value = values[id] || "";
         });
     } catch {
-        // Silently ignore corrupt data.
+        // Silently ignore — contract may not have details set yet.
     }
 }
 
@@ -532,7 +550,6 @@ async function onWalletReady() {
     document.getElementById("disconnect-btn").addEventListener("click", showSetup);
     document.getElementById("refresh-btn").addEventListener("click", refreshDashboard);
     document.getElementById("company-form").addEventListener("submit", saveCompanyDetails);
-    loadCompanyDetails();
 
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {

@@ -86,7 +86,7 @@
                 <div class="tabs mt-2">
                     <button class="tab active" onclick="switchTab(event,'tab-employees')">Employees</button>
                     <button class="tab" onclick="switchTab(event,'tab-deposit')">Funds</button>
-                    <button class="tab" onclick="switchTab(event,'tab-company')">Company</button>
+                    <button class="tab" onclick="switchTab(event,'tab-company')">Details</button>
                 </div>
 
                 <!-- Employees tab -->
@@ -240,12 +240,12 @@
                     </div>
                 </div>
 
-                <!-- Company tab -->
+                <!-- Details tab -->
                 <div id="tab-company" class="tab-panel">
                     <div class="card">
                         <h2>Company Details</h2>
                         <p class="muted-sm mb-2">
-                            Optional contact information for your company. This data is stored locally in your browser and is not sent on-chain.
+                            Optional contact information for your company. This data is stored on-chain with your payroll contract.
                         </p>
                         <form id="company-form">
                             <div class="form-section-label">General</div>
@@ -262,17 +262,17 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="company-email">Email</label>
-                                    <input type="email" id="company-email" placeholder="payroll@acme.com" autocomplete="email" />
+                                    <input type="text" id="company-email" placeholder="payroll@acme.com" autocomplete="email" />
                                 </div>
                                 <div class="form-group">
                                     <label for="company-phone">Phone</label>
-                                    <input type="tel" id="company-phone" placeholder="+1 555 000 0000" autocomplete="tel" />
+                                    <input type="text" id="company-phone" placeholder="+1 555 000 0000" autocomplete="tel" />
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="company-website">Website</label>
-                                    <input type="url" id="company-website" placeholder="https://acme.com" autocomplete="url" />
+                                    <input type="text" id="company-website" placeholder="https://acme.com" autocomplete="url" />
                                 </div>
                                 <div class="form-group">
                                     <label for="company-tax-id">Tax ID / EIN</label>
@@ -281,8 +281,8 @@
                             </div>
                             <div class="form-section-label">Address</div>
                             <div class="form-group">
-                                <label for="company-street">Street address</label>
-                                <input type="text" id="company-street" placeholder="123 Main St" autocomplete="street-address" />
+                                <label for="company-country">Country</label>
+                                <input type="text" id="company-country" placeholder="United States" autocomplete="country-name" />
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -293,14 +293,14 @@
                                     <label for="company-state">State / Province</label>
                                     <input type="text" id="company-state" placeholder="IL" autocomplete="address-level1" />
                                 </div>
-                                <div class="form-group">
-                                    <label for="company-zip">Zip / Postal code</label>
-                                    <input type="text" id="company-zip" placeholder="62701" autocomplete="postal-code" />
-                                </div>
                             </div>
                             <div class="form-group">
-                                <label for="company-country">Country</label>
-                                <input type="text" id="company-country" placeholder="United States" autocomplete="country-name" />
+                                <label for="company-street">Street address</label>
+                                <input type="text" id="company-street" placeholder="123 Main St" autocomplete="street-address" />
+                            </div>
+                            <div class="form-group">
+                                <label for="company-zip">Zip / Postal code</label>
+                                <input type="text" id="company-zip" placeholder="62701" autocomplete="postal-code" />
                             </div>
                             <div class="form-section-label">Notes</div>
                             <div class="form-group">
