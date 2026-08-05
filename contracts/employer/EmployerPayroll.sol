@@ -65,7 +65,7 @@ contract EmployerPayroll {
     // ─────────────────────────────────────────────
 
     event FundsDeposited(address indexed from, uint256 amount);
-    event CompanyDetailsUpdated();
+    event CompanyDetailsUpdated(address indexed employer);
     event EmployeeRegistered(address indexed employee, address indexed employeeContract, uint256 wageWei, uint256 payFrequency);
     event EmployeeActivated(address indexed employee, address indexed employeeContract);
     event EmployeeUpdated(address indexed employee, uint256 wageWei, uint256 payFrequency);
@@ -366,7 +366,7 @@ contract EmployerPayroll {
             zip: zip,
             notes: notes
         });
-        emit CompanyDetailsUpdated();
+        emit CompanyDetailsUpdated(employer);
     }
 
     /**
@@ -376,7 +376,6 @@ contract EmployerPayroll {
     function getCompanyDetails()
         external
         view
-        onlyEmployer
         returns (
             string memory,
             string memory,

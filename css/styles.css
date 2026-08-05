@@ -255,6 +255,9 @@ footer a:hover {
 }
 
 input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
 input[type="number"],
 input[type="date"],
 textarea,
