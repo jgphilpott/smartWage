@@ -193,15 +193,15 @@ The employee contract is no longer a multi-employer self-deployed portal. It now
 
 smartWage includes a set of [Cairo 2](https://docs.cairo-lang.org/) ZK-STARK programs that let employees prove facts about their salary to third parties **without revealing the actual wage amount**.  The proofs are anchored to an on-chain Poseidon commitment stored by the employer, so no employer letter or payslip needs to be shared.
 
-Three proofs are currently implemented in `cairo/src/`:
+The Cairo package has been refactored into a reusable library, `workforce_attestation_proofs`, with optional smartWage-oriented example executables:
 
 | Executable | Statement proven | Example use case |
 |---|---|---|
-| `minimum_income_proof` | wage ≥ X | Mortgage / rental eligibility |
-| `maximum_income_proof` | wage ≤ X | Means-tested benefits, tax bracket |
-| `salary_range_proof`   | A ≤ wage ≤ B | Insurance, tax confirmation |
+| `example_minimum_income_proof` | wage ≥ X | Mortgage / rental eligibility |
+| `example_maximum_income_proof` | wage ≤ X | Means-tested benefits, tax bracket |
+| `example_salary_range_proof`   | A ≤ wage ≤ B | Insurance, tax confirmation |
 
-See [`docs/zk-starks.md`](docs/zk-starks.md) for the full design rationale, commitment scheme, and instructions for building and running the proofs with [Scarb](https://docs.swmansion.com/scarb/).
+See [`docs/zk-starks.md`](docs/zk-starks.md) and [`cairo/README.md`](cairo/README.md) for design rationale, proof interfaces, and package build/run instructions.
 
 ---
 

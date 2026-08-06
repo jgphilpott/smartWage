@@ -1,30 +1,14 @@
-//! # Employment Duration Proof
+//! # Example: Employment Duration Proof
 //!
-//! A Cairo 2 program that proves an employee has remained on payroll for at least
-//! a required duration, while allowing a verifier to enforce a maximum tolerated
-//! payment gap, without revealing salary information.
+//! This executable demonstrates the stable v1 interface for proving:
+//! 1) Active employment status.
+//! 2) Minimum active tenure.
+//! 3) Bounded latest payment gap.
 //!
-//! ## Public data the proof is anchored to
-//!
-//! This proof uses public employment facts exposed by `EmployerPayroll`:
-//!
-//! - `activated_at` — the timestamp when the employee signed and became active
-//! - `last_paid` — the latest successful payroll payment timestamp
-//! - `pay_frequency` — the scheduled cadence between payroll cycles
-//! - `active` — whether the employee is still active
-//!
-//! ## What the proof attests to
-//!
-//! 1. The employee is currently active on the target payroll.
-//! 2. The employee has been active for at least `min_duration_seconds`.
-//! 3. The latest observed payment gap does not exceed `max_gap_seconds`.
-//!
-//! ## Honest caveat
-//!
-//! This is an exploratory proof over the current data model. The contract does not
-//! yet persist a full private pay-history trace, so it cannot prove *every* gap in
-//! the employment timeline. It can currently prove a lower bound on tenure plus a
-//! bounded latest gap using the public payroll schedule and timestamps.
+//! Public inputs: all fields except those your application decides to keep private.
+//! In smartWage these values are anchored to `getEmploymentProofContext()`.
+
+use workforce_attestation_proofs::adapters::assert_smartwage_employment_duration;
 
 fn main(
     active: bool,
@@ -35,16 +19,13 @@ fn main(
     min_duration_seconds: u64,
     max_gap_seconds: u64,
 ) {
-    assert(active, 'Employment is not active');
-    assert(current_time >= activated_at, 'Current time before activation');
-
-    let employment_duration = current_time - activated_at;
-    assert(employment_duration >= min_duration_seconds, 'Employment duration too short');
-
-    assert(last_paid >= activated_at, 'Invalid payment timeline');
-    assert(pay_frequency <= max_gap_seconds, 'Configured pay frequency exceeds allowed gap');
-
-    assert(current_time >= last_paid, 'current_time before last_paid');
-    let gap_since_last_payment = current_time - last_paid;
-    assert(gap_since_last_payment <= max_gap_seconds, 'Latest payment gap too large');
+    assert_smartwage_employment_duration(
+        active,
+        activated_at,
+        last_paid,
+        pay_frequency,
+        current_time,
+        min_duration_seconds,
+        max_gap_seconds,
+    );
 }

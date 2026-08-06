@@ -131,7 +131,8 @@ readable by the employer or the employee's linked portal contract.
 
 ### Off-chain proving component (Cairo 2)
 
-The Cairo programs in `/cairo/src/` implement the current proof prototypes.
+The Cairo package in `/cairo/` now exposes reusable proof modules plus
+smartWage-specific example executables.
 When the employee wants to prove their income to a third party:
 
 1. The employee (or a proving service acting on their behalf) runs the Cairo
@@ -231,20 +232,27 @@ expected deployment model for production use.
 
 ## Proof of concept
 
-Five exploratory proofs are implemented as Cairo 2 executables in:
+Five exploratory proofs are implemented as Cairo 2 example executables in:
 
 ```
 cairo/
-├── Scarb.toml                      # Scarb package manifest
+├── Scarb.toml                      # Scarb package manifest (`workforce_attestation_proofs`)
+├── README.md                       # Package usage + interface docs
 └── src/
-    ├── minimum_income_proof.cairo  # Proves wage >= threshold
-    ├── maximum_income_proof.cairo  # Proves wage <= threshold
-    ├── salary_range_proof.cairo    # Proves lower <= wage <= upper
-    ├── employment_duration_proof.cairo # Proves active tenure >= N and latest gap <= D
-    └── employer_membership_proof.cairo # Proves active employment for a known payroll contract
+    ├── lib.cairo                   # Reusable proof package entrypoint (v1 interface)
+    ├── income.cairo                # Generic income proof primitives
+    ├── employment.cairo            # Generic employment proof primitives
+    ├── identity.cairo              # Generic identity/membership proof primitives
+    ├── adapters.cairo              # smartWage schema adapter layer
+    ├── minimum_income_proof.cairo      # `example_minimum_income_proof`
+    ├── maximum_income_proof.cairo      # `example_maximum_income_proof`
+    ├── salary_range_proof.cairo        # `example_salary_range_proof`
+    ├── employment_duration_proof.cairo # `example_employment_duration_proof`
+    └── employer_membership_proof.cairo # `example_employer_membership_proof`
 ```
 
-See the inline documentation in each `.cairo` file for build and run instructions.
+See `cairo/README.md` for build instructions, example inputs, and proof interface
+stability notes.
 
 ### Current scaffolding status for applications 4 and 5
 

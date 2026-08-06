@@ -1,27 +1,31 @@
 [package]
-name = "smartwage_proofs"
+name = "workforce_attestation_proofs"
 version = "0.1.0"
 edition = "2024_07"
+description = "General-purpose attestation proofs for employment and adjacent eligibility use cases"
+repository = "https://github.com/jgphilpott/smartWage"
+license = "MIT"
+readme = "README.md"
 
 # Cairo standard library is included by default.
 # No additional dependencies are required for these proofs.
 
 [[target.executable]]
-name = "minimum_income_proof"
+name = "example_minimum_income_proof"
 source_path = "src/minimum_income_proof.cairo"
 
 [[target.executable]]
-name = "maximum_income_proof"
+name = "example_maximum_income_proof"
 source_path = "src/maximum_income_proof.cairo"
 
 [[target.executable]]
-name = "salary_range_proof"
+name = "example_salary_range_proof"
 source_path = "src/salary_range_proof.cairo"
 
 [[target.executable]]
-name = "employment_duration_proof"
+name = "example_employment_duration_proof"
 source_path = "src/employment_duration_proof.cairo"
 
 [[target.executable]]
-name = "employer_membership_proof"
+name = "example_employer_membership_proof"
 source_path = "src/employer_membership_proof.cairo"

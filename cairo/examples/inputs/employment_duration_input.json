@@ -1,0 +1,9 @@
+{
+  "active": true,
+  "activated_at": "1700000000",
+  "last_paid": "1702500000",
+  "pay_frequency": "2592000",
+  "current_time": "1703000000",
+  "min_duration_seconds": "1200000",
+  "max_gap_seconds": "3000000"
+}

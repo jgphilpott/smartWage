@@ -1,0 +1,35 @@
+name: Cairo Proofs
+
+on:
+  push:
+    paths:
+      - 'cairo/**'
+      - '.github/workflows/cairo-proofs.yml'
+  pull_request:
+    paths:
+      - 'cairo/**'
+      - '.github/workflows/cairo-proofs.yml'
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cairo
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+
+      - name: Build Cairo package
+        run: scarb build
+
+      - name: Execute employment duration example
+        run: |
+          cairo-run \
+            --program target/dev/example_employment_duration_proof \
+            --layout all_cairo \
+            --program-input examples/inputs/employment_duration_input.json

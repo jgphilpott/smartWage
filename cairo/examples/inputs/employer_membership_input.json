@@ -1,0 +1,11 @@
+{
+  "employer_contract": "0x1234",
+  "expected_employer_contract": "0x1234",
+  "employee_address": "0x5678",
+  "expected_employee_address": "0x5678",
+  "active": true,
+  "start_year": "2025",
+  "start_month": "1",
+  "start_day": "15",
+  "start_date_commitment": "<replace_with_poseidon_hash(start_year,start_month,start_day)>"
+}

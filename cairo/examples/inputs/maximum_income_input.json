@@ -1,0 +1,8 @@
+{
+  "wage_low": "10000000000000000",
+  "wage_high": "0",
+  "salt": "0x1a2b3c4d",
+  "max_income_low": "50000000000000000",
+  "max_income_high": "0",
+  "wage_commitment": "<replace_with_poseidon_hash(wage_low,wage_high,salt)>"
+}
