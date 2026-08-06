@@ -4,7 +4,7 @@ pub fn assert_active_employment(active: bool) {
     assert(active, 'Employment is not active');
 }
 
-pub fn assert_duration_and_gap(
+pub fn assert_employment_duration_and_gap(
     active: bool,
     activated_at: u64,
     last_paid: u64,

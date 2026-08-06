@@ -1,5 +1,6 @@
 //! smartWage adapter functions that map app-specific field names to generic modules.
 
+/// Maps smartWage wage commitment field names to the generic income commitment check.
 pub fn assert_smartwage_wage_commitment(
     wage_low: u128,
     wage_high: u128,
@@ -9,6 +10,7 @@ pub fn assert_smartwage_wage_commitment(
     crate::income::assert_wage_commitment(wage_low, wage_high, salt, wage_commitment);
 }
 
+/// Maps smartWage minimum-income field names to the generic lower-bound assertion.
 pub fn assert_smartwage_income_minimum(
     wage_low: u128,
     wage_high: u128,
@@ -20,6 +22,7 @@ pub fn assert_smartwage_income_minimum(
     crate::income::assert_min_income(wage, min_income);
 }
 
+/// Maps smartWage maximum-income field names to the generic upper-bound assertion.
 pub fn assert_smartwage_income_maximum(
     wage_low: u128,
     wage_high: u128,
@@ -31,6 +34,7 @@ pub fn assert_smartwage_income_maximum(
     crate::income::assert_max_income(wage, max_income);
 }
 
+/// Maps smartWage range fields to the generic inclusive income range assertion.
 pub fn assert_smartwage_income_range(
     wage_low: u128,
     wage_high: u128,
@@ -54,7 +58,7 @@ pub fn assert_smartwage_employment_duration(
     min_duration_seconds: u64,
     max_gap_seconds: u64,
 ) {
-    crate::employment::assert_duration_and_gap(
+    crate::employment::assert_employment_duration_and_gap(
         active,
         activated_at,
         last_paid,
@@ -65,6 +69,7 @@ pub fn assert_smartwage_employment_duration(
     );
 }
 
+/// Maps smartWage employer membership context fields to the generic identity assertion.
 pub fn assert_smartwage_employer_membership(
     employer_contract: felt252,
     expected_employer_contract: felt252,

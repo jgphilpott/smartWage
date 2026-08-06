@@ -2,6 +2,10 @@
 
 use core::poseidon::poseidon_hash_span;
 
+/// Computes the canonical start-date commitment as:
+/// `poseidon_hash_span([start_year, start_month, start_day])`.
+///
+/// External systems must hash fields in this exact order to match proofs.
 pub fn start_date_commitment(start_year: u32, start_month: u8, start_day: u8) -> felt252 {
     poseidon_hash_span(array![start_year.into(), start_month.into(), start_day.into()].span())
 }
