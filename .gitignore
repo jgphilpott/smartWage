@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Cairo artifacts
+target/
+
 # Hardhat build artifacts
 deployed.json
 artifacts/
