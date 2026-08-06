@@ -29,6 +29,9 @@ jobs:
 
       - name: Execute employment duration example
         run: |
+          # Other example inputs require real Poseidon commitments and are
+          # documented placeholders, so this smoke test runs the fully-runnable
+          # non-placeholder example to catch execution regressions.
           cairo-run \
             --program target/dev/example_employment_duration_proof \
             --layout all_cairo \

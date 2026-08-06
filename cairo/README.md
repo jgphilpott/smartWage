@@ -14,6 +14,7 @@ Current proof interface version: `v1`.
 Compatibility policy:
 - Backward-compatible additions keep `v1`.
 - Breaking changes increment the version and are documented before release.
+- Shared version and namespace constants are defined in `src/conventions.cairo`.
 
 ## Proof catalog
 
@@ -34,6 +35,10 @@ Compatibility policy:
 ### Adapter layer (`src/adapters.cairo`)
 - Maps smartWage input names and context fields to generic library primitives.
 - Downstream applications can replace this adapter with their own schema mapping.
+
+### Shared conventions (`src/conventions.cairo`)
+- Stable interface version constant.
+- Reserved domain namespace constants for future proof expansion.
 
 ## What proofs guarantee
 

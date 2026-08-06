@@ -240,6 +240,7 @@ cairo/
 ├── README.md                       # Package usage + interface docs
 └── src/
     ├── lib.cairo                   # Reusable proof package entrypoint (v1 interface)
+    ├── conventions.cairo           # Interface version + namespace conventions
     ├── income.cairo                # Generic income proof primitives
     ├── employment.cairo            # Generic employment proof primitives
     ├── identity.cairo              # Generic identity/membership proof primitives
