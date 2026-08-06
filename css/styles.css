@@ -5,7 +5,8 @@
     --border: #444444;
     --accent: #9c69ed;
     --accent-hover: #b48cf2;
-    --accent-danger: #f7a539;
+    --accent-warning: #f7a539;
+    --accent-danger: #f75639;
     --accent-success: #60e8b3;
     --text: #e8eaf6;
     --text-muted: #9a9a9a;
@@ -187,12 +188,12 @@ footer a:hover {
 }
 
 .btn-danger {
-    background: var(--accent-danger);
+    background: var(--accent-warning);
     color: #fff;
 }
 
 .btn-danger:hover {
-    background: #f75639;
+    background: var(--accent-danger);
 }
 
 .btn-success {
@@ -398,7 +399,7 @@ tr:hover td {
 .badge-danger {
     background: rgba(247,165,57,0.15);
     border: 0px solid var(--border);
-    color: var(--accent-danger);
+    color: var(--accent-warning);
 }
 
 /* ── Wallet / Hero section ───────────────────── */
@@ -557,7 +558,7 @@ tr:hover td {
 .alert-error {
     background: rgba(247,165,57,0.1);
     border: 1px solid rgba(247,165,57,0.3);
-    color: var(--accent-danger);
+    color: var(--accent-warning);
 }
 
 /* ── Tabs ─────────────────────────────────────── */
@@ -712,8 +713,8 @@ tr:hover td {
 
 .toast-error {
     background: #3a2a10;
-    border: 1px solid var(--accent-danger);
-    color: var(--accent-danger);
+    border: 1px solid var(--accent-warning);
+    color: var(--accent-warning);
 }
 
 .toast-info {
@@ -727,5 +728,5 @@ tr:hover td {
     to   { transform: translateX(0);    opacity: 1; }
 }
 
-.runway-warning { color: var(--accent-danger); }
-.runway-danger  { color: #e84040; }
+.runway-warning { color: var(--accent-warning); }
+.runway-danger  { color: var(--accent-danger); }

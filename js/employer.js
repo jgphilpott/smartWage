@@ -250,7 +250,7 @@ async function loadFundsHistory() {
         }).join("");
     } catch (err) {
         console.error("loadFundsHistory failed:", err);
-        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--accent-danger)">Error loading funds activity: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--accent-warning)">Error loading funds activity: ${err.message}</td></tr>`;
     }
 }
 
