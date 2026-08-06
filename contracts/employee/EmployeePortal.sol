@@ -18,6 +18,7 @@ interface IEmployerPayroll {
             uint256,   // wageWei
             uint256,   // payFrequency
             uint256,   // lastPaid
+            uint256,   // activatedAt
             bool       // active
         );
 
@@ -114,6 +115,7 @@ contract EmployeePortal {
      * @return wageWei       Wage per cycle in wei.
      * @return payFrequency  Seconds between pay cycles.
      * @return lastPaid      Unix timestamp of last payment.
+     * @return activatedAt   Unix timestamp when the employee signed and became active.
      * @return active        Whether the employee record is active.
      */
     function getContractDetails()
@@ -125,6 +127,7 @@ contract EmployeePortal {
             uint256 wageWei,
             uint256 payFrequency,
             uint256 lastPaid,
+            uint256 activatedAt,
             bool    active
         )
     {
@@ -154,7 +157,7 @@ contract EmployeePortal {
      * @notice Return whether the employee has signed and whether the linked payroll record is active.
      */
     function getAgreementStatus() external view onlyParties returns (bool contractSigned, bool active) {
-        (, , , , active) = IEmployerPayroll(employerPayroll).getEmployee(employee);
+        (, , , , , active) = IEmployerPayroll(employerPayroll).getEmployee(employee);
         return (signed, active);
     }
 }

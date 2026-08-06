@@ -17,3 +17,11 @@ source_path = "src/maximum_income_proof.cairo"
 [[target.executable]]
 name = "salary_range_proof"
 source_path = "src/salary_range_proof.cairo"
+
+[[target.executable]]
+name = "employment_duration_proof"
+source_path = "src/employment_duration_proof.cairo"
+
+[[target.executable]]
+name = "employer_membership_proof"
+source_path = "src/employer_membership_proof.cairo"

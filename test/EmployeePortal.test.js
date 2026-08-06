@@ -63,9 +63,10 @@ describe("EmployeePortal", function () {
 
             expect(await portal.signed()).to.be.true;
 
-            const [, , , lastPaid, active] = await payroll.getEmployee(employee.address);
+            const [, , , lastPaid, activatedAt, active] = await payroll.getEmployee(employee.address);
             expect(active).to.be.true;
             expect(lastPaid).to.be.gt(0);
+            expect(activatedAt).to.equal(lastPaid);
         });
 
         it("reverts if caller is not the employee", async function () {
@@ -85,13 +86,14 @@ describe("EmployeePortal", function () {
 
     describe("getContractDetails()", function () {
         it("returns the linked employee's details from payroll", async function () {
-            const [addr, wageWei, payFrequency, lastPaid, active] =
+            const [addr, wageWei, payFrequency, lastPaid, activatedAt, active] =
                 await portal.getContractDetails();
 
             expect(addr).to.equal(employee.address);
             expect(wageWei).to.equal(WAGE);
             expect(payFrequency).to.equal(ONE_WEEK);
             expect(lastPaid).to.equal(0);
+            expect(activatedAt).to.equal(0);
             expect(active).to.be.false;
         });
     });

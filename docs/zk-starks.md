@@ -131,7 +131,7 @@ readable by the employer or the employee's linked portal contract.
 
 ### Off-chain proving component (Cairo 2)
 
-The Cairo programs in `/cairo/src/` implement the income proofs.
+The Cairo programs in `/cairo/src/` implement the current proof prototypes.
 When the employee wants to prove their income to a third party:
 
 1. The employee (or a proving service acting on their behalf) runs the Cairo
@@ -154,6 +154,12 @@ The verifier checks:
 
 If all three checks pass, the verifier is convinced that the employee's wage is
 at or above the threshold, without learning anything else.
+
+For the employment-oriented proof prototypes, the verifier additionally anchors
+the proof to the public context returned by
+`EmployerPayroll.getEmploymentProofContext()`, which exposes the employer
+address, employee address, active flag, activation timestamp, pay frequency,
+latest payment timestamp, and public start date.
 
 For on-chain verification on Starknet, the proof can be submitted to a Starknet
 verifier contract.  For off-chain verification (a bank's back-end system, an
@@ -225,7 +231,7 @@ expected deployment model for production use.
 
 ## Proof of concept
 
-Three income proofs are implemented as Cairo 2 executables in:
+Five exploratory proofs are implemented as Cairo 2 executables in:
 
 ```
 cairo/
@@ -233,10 +239,32 @@ cairo/
 └── src/
     ├── minimum_income_proof.cairo  # Proves wage >= threshold
     ├── maximum_income_proof.cairo  # Proves wage <= threshold
-    └── salary_range_proof.cairo    # Proves lower <= wage <= upper
+    ├── salary_range_proof.cairo    # Proves lower <= wage <= upper
+    ├── employment_duration_proof.cairo # Proves active tenure >= N and latest gap <= D
+    └── employer_membership_proof.cairo # Proves active employment for a known payroll contract
 ```
 
 See the inline documentation in each `.cairo` file for build and run instructions.
+
+### Current scaffolding status for applications 4 and 5
+
+The repository now has enough scaffolding to prototype both proof types:
+
+- `EmployerPayroll` now records `activatedAt` when the employee signs.
+- `EmployerPayroll.getEmploymentProofContext()` exposes the public employment
+  fields that a verifier can use to anchor these proofs.
+- Cairo proof-of-concept executables exist for both employment duration and
+  employer membership.
+
+Current limitations still present in the data model:
+
+- **Employment duration proof:** the contract does not persist a full historical
+  sequence of pay-cycle checkpoints, so the prototype proves a lower bound on
+  active tenure plus a bounded latest payment gap, not a proof that every
+  historical gap was below `D`.
+- **Employer membership proof:** the prototype proves active membership against
+  a known payroll contract and a committed start-date tuple, but still depends
+  on the verifier reading public employment context from the target contract.
 
 ---
 
