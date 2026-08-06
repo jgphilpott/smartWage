@@ -321,7 +321,7 @@ contract EmployerPayroll {
     /**
      * @notice Get the details of a registered employee.
      * @param addr Employee wallet address.
-     * @return Employee struct fields: addr, wageWei, payFrequency, lastPaid, active.
+     * @return Employee struct fields: addr, wageWei, payFrequency, lastPaid, activatedAt, active.
      */
     function getEmployee(address addr)
         external
