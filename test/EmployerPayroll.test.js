@@ -634,4 +634,105 @@ describe("EmployerPayroll", function () {
             expect(await payroll.getWageCommitment(employee1.address)).to.equal(VALID_COMMITMENT);
         });
     });
+
+    describe("setCompanyDetails() / getCompanyDetails()", function () {
+        const DETAILS = {
+            name: "Acme Corp",
+            industry: "Technology",
+            email: "info@acme.com",
+            phone: "+1-555-0100",
+            website: "https://acme.com",
+            taxId: "12-3456789",
+            country: "US",
+            city: "Springfield",
+            state: "IL",
+            street: "123 Main St",
+            zip: "62701",
+            notes: "Primary payroll contract",
+        };
+
+        it("returns empty strings for all fields before any details are set", async function () {
+            const result = await payroll.getCompanyDetails();
+            const [name, industry, email, phone, website, taxId, country, city, state, street, zip, notes] = result;
+            expect(name).to.equal("");
+            expect(industry).to.equal("");
+            expect(email).to.equal("");
+            expect(phone).to.equal("");
+            expect(website).to.equal("");
+            expect(taxId).to.equal("");
+            expect(country).to.equal("");
+            expect(city).to.equal("");
+            expect(state).to.equal("");
+            expect(street).to.equal("");
+            expect(zip).to.equal("");
+            expect(notes).to.equal("");
+        });
+
+        it("allows the employer to store company details and retrieve them", async function () {
+            await payroll.setCompanyDetails(
+                DETAILS.name, DETAILS.industry, DETAILS.email, DETAILS.phone,
+                DETAILS.website, DETAILS.taxId, DETAILS.country, DETAILS.city,
+                DETAILS.state, DETAILS.street, DETAILS.zip, DETAILS.notes
+            );
+            const [name, industry, email, phone, website, taxId, country, city, state, street, zip, notes] =
+                await payroll.getCompanyDetails();
+            expect(name).to.equal(DETAILS.name);
+            expect(industry).to.equal(DETAILS.industry);
+            expect(email).to.equal(DETAILS.email);
+            expect(phone).to.equal(DETAILS.phone);
+            expect(website).to.equal(DETAILS.website);
+            expect(taxId).to.equal(DETAILS.taxId);
+            expect(country).to.equal(DETAILS.country);
+            expect(city).to.equal(DETAILS.city);
+            expect(state).to.equal(DETAILS.state);
+            expect(street).to.equal(DETAILS.street);
+            expect(zip).to.equal(DETAILS.zip);
+            expect(notes).to.equal(DETAILS.notes);
+        });
+
+        it("allows the employer to update company details", async function () {
+            await payroll.setCompanyDetails(
+                DETAILS.name, DETAILS.industry, DETAILS.email, DETAILS.phone,
+                DETAILS.website, DETAILS.taxId, DETAILS.country, DETAILS.city,
+                DETAILS.state, DETAILS.street, DETAILS.zip, DETAILS.notes
+            );
+            await payroll.setCompanyDetails(
+                "Updated Corp", "", "", "", "", "", "", "", "", "", "", ""
+            );
+            const [name] = await payroll.getCompanyDetails();
+            expect(name).to.equal("Updated Corp");
+        });
+
+        it("emits CompanyDetailsUpdated with the employer address on update", async function () {
+            await expect(
+                payroll.setCompanyDetails(
+                    DETAILS.name, DETAILS.industry, DETAILS.email, DETAILS.phone,
+                    DETAILS.website, DETAILS.taxId, DETAILS.country, DETAILS.city,
+                    DETAILS.state, DETAILS.street, DETAILS.zip, DETAILS.notes
+                )
+            )
+                .to.emit(payroll, "CompanyDetailsUpdated")
+                .withArgs(employer.address);
+        });
+
+        it("reverts setCompanyDetails when called by a non-employer", async function () {
+            await expect(
+                payroll.connect(other).setCompanyDetails(
+                    DETAILS.name, DETAILS.industry, DETAILS.email, DETAILS.phone,
+                    DETAILS.website, DETAILS.taxId, DETAILS.country, DETAILS.city,
+                    DETAILS.state, DETAILS.street, DETAILS.zip, DETAILS.notes
+                )
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+
+        it("allows anyone to call getCompanyDetails", async function () {
+            await payroll.setCompanyDetails(
+                DETAILS.name, DETAILS.industry, DETAILS.email, DETAILS.phone,
+                DETAILS.website, DETAILS.taxId, DETAILS.country, DETAILS.city,
+                DETAILS.state, DETAILS.street, DETAILS.zip, DETAILS.notes
+            );
+            const [name] = await payroll.connect(other).getCompanyDetails();
+            expect(name).to.equal(DETAILS.name);
+        });
+    });
 });
