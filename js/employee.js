@@ -264,7 +264,7 @@ async function viewPayHistory() {
         `).join("");
     } catch (err) {
         console.error("viewPayHistory failed:", err);
-        historyBody.innerHTML = `<tr><td colspan="5" style="color:var(--accent-danger)">Error loading history: ${err.message}</td></tr>`;
+        historyBody.innerHTML = `<tr><td colspan="5" style="color:var(--accent-warning)">Error loading history: ${err.message}</td></tr>`;
     }
 }
 

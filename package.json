@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "A simple dApp that uses smart contracts to automate the payroll process.",
   "scripts": {
-    "compile": "hardhat compile",
+    "compile": "hardhat compile && npm run sync-abis",
+    "sync-abis": "cp artifacts/contracts/employer/EmployerPayroll.sol/EmployerPayroll.json abis/EmployerPayroll.json && cp artifacts/contracts/employee/EmployeePortal.sol/EmployeePortal.json abis/EmployeePortal.json",
     "test": "hardhat test",
     "clean": "hardhat clean"
   },

@@ -480,6 +480,47 @@ contract EmployerPayroll {
         return emp.active && !_employeeRemoved[addr] && _isDue(emp);
     }
 
+    /**
+     * @notice Estimate how long the current balance can sustain payroll with no new deposits or bonuses.
+     * @return runwaySeconds Seconds until the contract can no longer cover the next scheduled payroll obligation.
+     * @return effectiveBalance Balance remaining after subtracting currently due unpaid scheduled wages.
+     */
+    function getPayrollRunway() external view onlyEmployer returns (uint256 runwaySeconds, uint256 effectiveBalance) {
+        uint256 balance = address(this).balance;
+        uint256 nextRunoutAt = type(uint256).max;
+        bool hasActiveEmployee = false;
+
+        for (uint256 i = 0; i < _employeeList.length; ) {
+            Employee storage emp = _employees[_employeeList[i]];
+            if (emp.active && !_employeeRemoved[emp.addr]) {
+                hasActiveEmployee = true;
+
+                uint256 dueCycles = _dueCycles(emp);
+                uint256 dueAmount = dueCycles * emp.wageWei;
+                if (dueAmount >= balance) {
+                    return (0, 0);
+                }
+
+                balance -= dueAmount;
+
+                uint256 cyclesAffordable = balance / emp.wageWei;
+                uint256 candidateRunoutAt = emp.lastPaid + ((dueCycles + cyclesAffordable + 1) * emp.payFrequency);
+                if (candidateRunoutAt < nextRunoutAt) {
+                    nextRunoutAt = candidateRunoutAt;
+                }
+            }
+            unchecked { ++i; }
+        }
+
+        effectiveBalance = balance;
+
+        if (!hasActiveEmployee || nextRunoutAt == type(uint256).max || nextRunoutAt <= block.timestamp) {
+            return (0, effectiveBalance);
+        }
+
+        runwaySeconds = nextRunoutAt - block.timestamp;
+    }
+
     // ─────────────────────────────────────────────
     //  ZK proof support
     // ─────────────────────────────────────────────

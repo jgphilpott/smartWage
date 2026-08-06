@@ -436,6 +436,70 @@ describe("EmployerPayroll", function () {
         });
     });
 
+    describe("getPayrollRunway()", function () {
+        it("returns the next shortfall time for active employees", async function () {
+            const ONE_DAY = 24 * 60 * 60;
+            const wage = ethers.parseEther("0.1");
+            await payroll.deposit({ value: ethers.parseEther("0.1") });
+            await registerAndSignEmployee(employee1, wage, ONE_DAY);
+
+            const [, effectiveBalance] = await payroll.getPayrollRunway();
+            expect(effectiveBalance).to.equal(ethers.parseEther("1.1"));
+
+            const [runwaySeconds] = await payroll.getPayrollRunway();
+            expect(runwaySeconds).to.equal(12 * ONE_DAY);
+        });
+
+        it("subtracts currently due unpaid wages before projecting runway", async function () {
+            const ONE_MINUTE = 60;
+            const wage = ethers.parseEther("0.2");
+            await registerAndSignEmployee(employee1, wage, ONE_MINUTE);
+            await time.increase((3 * ONE_MINUTE) + 1);
+
+            const [runwaySeconds, effectiveBalance] = await payroll.getPayrollRunway();
+            expect(effectiveBalance).to.equal(ethers.parseEther("0.4"));
+            expect(runwaySeconds).to.equal((3 * ONE_MINUTE) - 1);
+        });
+
+        it("returns zero runway when due wages already exhaust the balance", async function () {
+            const ONE_MINUTE = 60;
+            const wage = ethers.parseEther("0.5");
+            await registerAndSignEmployee(employee1, wage, ONE_MINUTE);
+            await time.increase((3 * ONE_MINUTE) + 1);
+
+            const [runwaySeconds, effectiveBalance] = await payroll.getPayrollRunway();
+            expect(runwaySeconds).to.equal(0);
+            expect(effectiveBalance).to.equal(0);
+        });
+
+        it("returns zero runway and full balance when no active employees are registered", async function () {
+            const [runwaySeconds, effectiveBalance] = await payroll.getPayrollRunway();
+            expect(runwaySeconds).to.equal(0);
+            expect(effectiveBalance).to.equal(ethers.parseEther("1.0"));
+        });
+
+        it("picks the earliest runout time across multiple active employees", async function () {
+            const ONE_DAY = 24 * 60 * 60;
+            const wage1 = ethers.parseEther("0.1");
+            const wage2 = ethers.parseEther("0.2");
+            await registerAndSignEmployee(employee1, wage1, ONE_DAY);
+            await registerAndSignEmployee(employee2, wage2, ONE_DAY);
+
+            const [runwaySeconds] = await payroll.getPayrollRunway();
+            // With 1.0 ETH and employee2 at 0.2 ETH/day: cyclesAffordable=5, so
+            // the contract projects runout at lastPaid + (0+5+1)*ONE_DAY ≈ 6 days from now
+            const expectedRunout = BigInt(6 * ONE_DAY);
+            expect(runwaySeconds).to.be.gt(0);
+            expect(runwaySeconds).to.be.lte(expectedRunout);
+        });
+
+        it("reverts when called by a non-employer", async function () {
+            await expect(
+                payroll.connect(employee1).getPayrollRunway()
+            ).to.be.revertedWith("EmployerPayroll: caller is not employer");
+        });
+    });
+
     describe("getEmployeeList() / getEmployeeCount()", function () {
         it("returns all registered employee addresses", async function () {
             await registerEmployee(employee1);
