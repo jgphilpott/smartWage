@@ -35,7 +35,7 @@ function getContract(address) {
 
 function formatDuration(seconds) {
     const totalSeconds = Number(seconds);
-    if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return "Due now";
+    if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return "~";
 
     const units = [
         { label: "y", value: 365 * 24 * 60 * 60 },
@@ -105,8 +105,20 @@ async function refreshDashboard() {
         ]);
 
         const [runwaySeconds, effectiveBalance] = runway;
-        document.getElementById("contract-balance").textContent = `${formatWei(balance)} · ${formatDuration(runwaySeconds)} runway`;
-        document.getElementById("contract-balance").title = `Projected usable balance after due wages: ${formatWei(effectiveBalance)}`;
+        document.getElementById("contract-balance").textContent = formatWei(balance);
+
+        const WARN_THRESHOLD = 90 * 24 * 60 * 60;
+        const DANGER_THRESHOLD = 30 * 24 * 60 * 60;
+        const runwayEl = document.getElementById("contract-runway");
+        const runwaySecs = Number(runwaySeconds);
+        runwayEl.textContent = runwaySecs > 0 ? formatDuration(runwaySeconds) : "~";
+        runwayEl.title = runwaySecs > 0 ? `Projected usable balance after due wages: ${formatWei(effectiveBalance)}` : "";
+        runwayEl.classList.remove("runway-warning", "runway-danger");
+        if (runwaySecs > 0 && runwaySecs <= DANGER_THRESHOLD) {
+            runwayEl.classList.add("runway-danger");
+        } else if (runwaySecs > 0 && runwaySecs <= WARN_THRESHOLD) {
+            runwayEl.classList.add("runway-warning");
+        }
         const addrDisplay = document.getElementById("contract-address-display");
         addrDisplay.textContent = contractAddress;
         addrDisplay.title = "Click to copy";

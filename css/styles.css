@@ -726,3 +726,6 @@ tr:hover td {
     from { transform: translateX(110%); opacity: 0; }
     to   { transform: translateX(0);    opacity: 1; }
 }
+
+.runway-warning { color: var(--accent-danger); }
+.runway-danger  { color: #e84040; }
