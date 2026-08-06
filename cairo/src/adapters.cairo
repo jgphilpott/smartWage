@@ -49,6 +49,7 @@ pub fn assert_smartwage_income_range(
     crate::income::assert_income_range(wage, min_income, max_income);
 }
 
+/// Maps smartWage employment timeline fields to the generic duration+gap assertion.
 pub fn assert_smartwage_employment_duration(
     active: bool,
     activated_at: u64,

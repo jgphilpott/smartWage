@@ -24,6 +24,7 @@ pub fn assert_max_income(wage: u256, max_income: u256) {
     assert(wage <= max_income, 'Income exceeds maximum threshold');
 }
 
+/// Asserts an inclusive income range and validates `min_income <= max_income`.
 pub fn assert_income_range(wage: u256, min_income: u256, max_income: u256) {
     assert(min_income <= max_income, 'Invalid income range');
     assert_min_income(wage, min_income);
