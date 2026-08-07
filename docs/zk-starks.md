@@ -132,7 +132,10 @@ readable by the employer or the employee's linked portal contract.
 ### Off-chain proving component (Cairo 2)
 
 The Cairo package in `/cairo/` now exposes reusable proof modules plus
-smartWage-specific example executables.
+smartWage-specific example executables. It is packaged as `smart_identity_proofs`
+(Smart Identity Proofs, or SIPs): a reusable selective-disclosure proof library
+that starts with employment attestations and can later expand to adjacent identity
+claims such as age, citizenship, or licence status.
 When the employee wants to prove their income to a third party:
 
 1. The employee (or a proving service acting on their behalf) runs the Cairo
@@ -236,7 +239,7 @@ Five exploratory proofs are implemented as Cairo 2 example executables in:
 
 ```
 cairo/
-├── Scarb.toml                      # Scarb package manifest (`workforce_attestation_proofs`)
+├── Scarb.toml                      # Scarb package manifest (`smart_identity_proofs`)
 ├── README.md                       # Package usage + interface docs
 └── src/
     ├── lib.cairo                   # Reusable proof package entrypoint (v1 interface)

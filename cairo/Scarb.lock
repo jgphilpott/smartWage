@@ -2,5 +2,5 @@
 version = 1
 
 [[package]]
-name = "workforce_attestation_proofs"
+name = "smart_identity_proofs"
 version = "0.1.0"

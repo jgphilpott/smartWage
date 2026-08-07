@@ -1,20 +1,30 @@
-name: Cairo Proofs
+name: Cairo and Hardhat Tests
 
 on:
   push:
     paths:
       - 'cairo/**'
+      - 'contracts/**'
+      - 'test/**'
+      - 'hardhat.config.js'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/cairo-proofs.yml'
   pull_request:
     paths:
       - 'cairo/**'
+      - 'contracts/**'
+      - 'test/**'
+      - 'hardhat.config.js'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/cairo-proofs.yml'
 
 permissions:
   contents: read
 
 jobs:
-  build-and-smoke-test:
+  cairo-build-and-smoke-test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,16 +36,35 @@ jobs:
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
+        with:
+          cache: false
 
       - name: Build Cairo package
         run: scarb build
 
       - name: Execute employment duration example
         run: |
-          # Other example inputs require real Poseidon commitments and are
-          # documented placeholders, so this smoke test runs the fully-runnable
-          # non-placeholder example to catch execution regressions.
-          cairo-run \
-            --program target/dev/example_employment_duration_proof \
+          scarb execute \
+            --executable-name example_employment_duration_proof \
+            --arguments-file examples/inputs/employment_duration_input.json \
             --layout all_cairo \
-            --program-input examples/inputs/employment_duration_input.json
+            --output none
+
+  hardhat-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Hardhat tests
+        run: npm test

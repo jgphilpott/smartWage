@@ -8,8 +8,9 @@
 //! Public inputs: all fields except those your application decides to keep private.
 //! In smartWage these values are anchored to `getEmploymentProofContext()`.
 
-use workforce_attestation_proofs::adapters::assert_smartwage_employment_duration;
+use crate::adapters::assert_smartwage_employment_duration;
 
+#[executable]
 fn main(
     active: bool,
     activated_at: u64,

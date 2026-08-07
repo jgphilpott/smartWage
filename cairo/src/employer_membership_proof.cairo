@@ -6,8 +6,9 @@
 //! 3) Employment is active.
 //! 4) The start-date commitment is consistent with provided date fields.
 
-use workforce_attestation_proofs::adapters::assert_smartwage_employer_membership;
+use crate::adapters::assert_smartwage_employer_membership;
 
+#[executable]
 fn main(
     employer_contract: felt252,
     expected_employer_contract: felt252,

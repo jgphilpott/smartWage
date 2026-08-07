@@ -1,11 +1,14 @@
-# workforce_attestation_proofs
+# smart_identity_proofs
 
-General-purpose attestation proofs for employment and adjacent eligibility use cases.
+Smart Identity Proofs (SIPs) is a reusable Cairo package for selective identity and
+data disclosure. It starts with employment attestations and is intended to expand
+to adjacent identity claims such as age, citizenship, or professional licenses.
 
 ## Package scope
 
 This package is structured as a reusable Cairo library with optional example executables.
-It is designed so applications can reuse proof logic without inheriting smartWage-specific field names.
+It is designed so applications can reuse proof logic without inheriting smartWage-specific
+field names.
 
 ## Stable interface
 
@@ -38,7 +41,7 @@ Compatibility policy:
 
 ### Shared conventions (`src/conventions.cairo`)
 - Stable interface version constant.
-- Reserved domain namespace constants for future proof expansion.
+- Reserved domain namespace constants for future proof expansion into broader identity proofs.
 
 ## What proofs guarantee
 
@@ -84,9 +87,35 @@ From `/cairo`:
 ```sh
 scarb build
 
-cairo-run --program target/dev/example_minimum_income_proof --layout all_cairo --program-input examples/inputs/minimum_income_input.json
-cairo-run --program target/dev/example_maximum_income_proof --layout all_cairo --program-input examples/inputs/maximum_income_input.json
-cairo-run --program target/dev/example_salary_range_proof --layout all_cairo --program-input examples/inputs/salary_range_input.json
-cairo-run --program target/dev/example_employment_duration_proof --layout all_cairo --program-input examples/inputs/employment_duration_input.json
-cairo-run --program target/dev/example_employer_membership_proof --layout all_cairo --program-input examples/inputs/employer_membership_input.json
+scarb execute --executable-name example_minimum_income_proof --arguments-file examples/inputs/minimum_income_input.json --layout all_cairo --output none
+scarb execute --executable-name example_maximum_income_proof --arguments-file examples/inputs/maximum_income_input.json --layout all_cairo --output none
+scarb execute --executable-name example_salary_range_proof --arguments-file examples/inputs/salary_range_input.json --layout all_cairo --output none
+scarb execute --executable-name example_employment_duration_proof --arguments-file examples/inputs/employment_duration_input.json --layout all_cairo --output none
+scarb execute --executable-name example_employer_membership_proof --arguments-file examples/inputs/employer_membership_input.json --layout all_cairo --output none
 ```
+
+The example input files are ordered JSON arrays of Cairo-serialized arguments.
+Numeric and boolean values are encoded as hex strings (`0x...`) in the same order
+as each executable function signature.
+
+## Publishing checklist
+
+Once `scarb build`, the example executions above, and the repository CI jobs are all
+passing:
+
+```sh
+# Inspect the exact files that will ship.
+scarb package --list
+
+# Build the publishable tarball locally.
+scarb package
+
+# Publish to the default registry once your Scarb registry credentials are configured.
+scarb publish
+```
+
+The packaged archive is written to `target/package/`. If you want Scarb to skip the
+pre-publish build verification step, `scarb publish --no-verify` is available, but
+the recommended path is to publish only after the local build and CI checks succeed.
+Both `scarb package` and `scarb publish` expect a clean working tree unless you
+explicitly pass `--allow-dirty` for a local dry run.

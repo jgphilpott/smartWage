@@ -193,7 +193,11 @@ The employee contract is no longer a multi-employer self-deployed portal. It now
 
 smartWage includes a set of [Cairo 2](https://docs.cairo-lang.org/) ZK-STARK programs that let employees prove facts about their salary to third parties **without revealing the actual wage amount**.  The proofs are anchored to an on-chain Poseidon commitment stored by the employer, so no employer letter or payslip needs to be shared.
 
-The Cairo package has been refactored into a reusable library, `workforce_attestation_proofs`, with optional smartWage-oriented example executables:
+The Cairo package has been refactored into a reusable library, `smart_identity_proofs`
+(Smart Identity Proofs, or SIPs), for selective identity and data disclosure. It
+currently focuses on employment attestations and can later expand to adjacent identity
+claims such as age, citizenship, or licence status. It includes optional
+smartWage-oriented example executables:
 
 | Executable | Statement proven | Example use case |
 |---|---|---|

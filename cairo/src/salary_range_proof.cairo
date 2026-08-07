@@ -7,10 +7,11 @@
 //! Public inputs: `min_income_*`, `max_income_*`, `wage_commitment`
 //! Private inputs: `wage_low`, `wage_high`, `salt`
 
-use workforce_attestation_proofs::adapters::{
+use crate::adapters::{
     assert_smartwage_income_range, assert_smartwage_wage_commitment,
 };
 
+#[executable]
 fn main(
     wage_low: u128,
     wage_high: u128,
