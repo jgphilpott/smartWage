@@ -1,27 +1,39 @@
 [package]
-name = "smartwage_proofs"
+name = "smart_identity_proofs"
 version = "0.1.0"
 edition = "2024_07"
+description = "Selective identity and data disclosure proofs, starting with employment attestations"
+repository = "https://github.com/jgphilpott/smartWage"
+license = "MIT"
+readme = "README.md"
+
+[lib]
+
+[cairo]
+enable-gas = false
+
+[dependencies]
+cairo_execute = "2.20.0"
 
 # Cairo standard library is included by default.
 # No additional dependencies are required for these proofs.
 
 [[target.executable]]
-name = "minimum_income_proof"
-source_path = "src/minimum_income_proof.cairo"
+name = "example_minimum_income_proof"
+function = "smart_identity_proofs::minimum_income_proof::main"
 
 [[target.executable]]
-name = "maximum_income_proof"
-source_path = "src/maximum_income_proof.cairo"
+name = "example_maximum_income_proof"
+function = "smart_identity_proofs::maximum_income_proof::main"
 
 [[target.executable]]
-name = "salary_range_proof"
-source_path = "src/salary_range_proof.cairo"
+name = "example_salary_range_proof"
+function = "smart_identity_proofs::salary_range_proof::main"
 
 [[target.executable]]
-name = "employment_duration_proof"
-source_path = "src/employment_duration_proof.cairo"
+name = "example_employment_duration_proof"
+function = "smart_identity_proofs::employment_duration_proof::main"
 
 [[target.executable]]
-name = "employer_membership_proof"
-source_path = "src/employer_membership_proof.cairo"
+name = "example_employer_membership_proof"
+function = "smart_identity_proofs::employer_membership_proof::main"

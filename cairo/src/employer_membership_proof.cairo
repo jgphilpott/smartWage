@@ -1,25 +1,14 @@
-//! # Employer Membership Proof
+//! # Example: Employer Membership Proof
 //!
-//! A Cairo 2 program that proves an employee is currently employed by a known
-//! employer payroll contract, without revealing salary data.
-//!
-//! ## Public data the proof is anchored to
-//!
-//! This proof is intended to be checked alongside `EmployerPayroll.getEmploymentProofContext()`
-//! and the known payroll contract address supplied by the verifier.
-//!
-//! ## What the proof attests to
-//!
-//! 1. The target payroll contract address matches the verifier's expected employer.
-//! 2. The employee address in the proof matches the on-chain employment record.
-//! 3. The employee is currently active.
-//! 4. The employment start date commitment matches the public on-chain start date.
-//!
-//! The start date is hashed into a commitment so the verifier can bind the proof to
-//! a specific employment record field without introducing salary data into the proof.
+//! This executable demonstrates the stable v1 interface for proving:
+//! 1) The proof targets the expected employer contract.
+//! 2) The proof targets the expected employee address.
+//! 3) Employment is active.
+//! 4) The start-date commitment is consistent with provided date fields.
 
-use core::poseidon::poseidon_hash_span;
+use crate::adapters::assert_smartwage_employer_membership;
 
+#[executable]
 fn main(
     employer_contract: felt252,
     expected_employer_contract: felt252,
@@ -31,12 +20,15 @@ fn main(
     start_day: u8,
     start_date_commitment: felt252,
 ) {
-    assert(active, 'Employment is not active');
-    assert(employer_contract == expected_employer_contract, 'Wrong employer contract');
-    assert(employee_address == expected_employee_address, 'Wrong employee address');
-
-    let computed_start_date_commitment = poseidon_hash_span(
-        array![start_year.into(), start_month.into(), start_day.into()].span(),
+    assert_smartwage_employer_membership(
+        employer_contract,
+        expected_employer_contract,
+        employee_address,
+        expected_employee_address,
+        active,
+        start_year,
+        start_month,
+        start_day,
+        start_date_commitment,
     );
-    assert(computed_start_date_commitment == start_date_commitment, 'Invalid start date commitment');
 }
