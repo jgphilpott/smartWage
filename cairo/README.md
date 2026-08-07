@@ -1,4 +1,4 @@
-# smart_identity_proofs
+# Smart Identity Proofs
 
 Smart Identity Proofs (SIPs) is a reusable Cairo package for selective identity and
 data disclosure. It starts with employment attestations and is intended to expand
