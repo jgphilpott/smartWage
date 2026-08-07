@@ -204,6 +204,8 @@ smartWage-oriented example executables:
 | `example_minimum_income_proof` | wage ≥ X | Mortgage / rental eligibility |
 | `example_maximum_income_proof` | wage ≤ X | Means-tested benefits, tax bracket |
 | `example_salary_range_proof`   | A ≤ wage ≤ B | Insurance, tax confirmation |
+| `example_employment_duration_proof` | active employment for at least T seconds, with no payment gap above G | Work history verification |
+| `example_employer_membership_proof` | current employer membership | Employment verification |
 
 See [`docs/zk-starks.md`](docs/zk-starks.md) and [`cairo/README.md`](cairo/README.md) for design rationale, proof interfaces, and package build/run instructions.
 

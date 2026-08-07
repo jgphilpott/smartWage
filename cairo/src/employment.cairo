@@ -22,7 +22,7 @@ pub fn assert_employment_duration_and_gap(
     assert(last_paid >= activated_at, 'Invalid payment timeline');
     assert(pay_frequency <= max_gap_seconds, 'Pay frequency exceeds max gap');
 
-    assert(current_time >= last_paid, 'current_time before last_paid');
+    assert(current_time >= last_paid, 'Current time before last payment');
     let gap_since_last_payment = current_time - last_paid;
     assert(gap_since_last_payment <= max_gap_seconds, 'Latest payment gap too large');
 }
